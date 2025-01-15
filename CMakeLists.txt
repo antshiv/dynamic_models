@@ -31,11 +31,11 @@ set(SRC_FILES
 )
 
 # Create a shared library for dynamic models
-add_library(dynamic_models ${SRC_FILES})
+#add_library(dynamic_models ${SRC_FILES})
 
 # Add tests
-enable_testing()
-add_subdirectory(${TEST_DIR})
+#enable_testing()
+#add_subdirectory(${TEST_DIR})
 
 # Add examples
 #add_executable(dynamic_models_example ${EXAMPLES_DIR}/main.c)

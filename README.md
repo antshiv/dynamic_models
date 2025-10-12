@@ -85,3 +85,4 @@ These placeholders will be replaced by higher-fidelity functions or lookup table
    ```bash
    git clone https://github.com/antshiv/dynamic_models.git
    cd dynamic_models
+   git submodule update --init --recursive  # pulls attitudeMathLibrary

@@ -6,6 +6,8 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+add_compile_definitions(_GNU_SOURCE)
+
 # Add compile options for debugging
 add_compile_options(-g -Wall -Wextra -Wpedantic)
 
@@ -15,9 +17,20 @@ set(INCLUDE_DIR ${PROJECT_ROOT}/include)
 set(SRC_DIR ${PROJECT_ROOT}/src)
 set(TEST_DIR ${PROJECT_ROOT}/tests)
 set(EXAMPLES_DIR ${PROJECT_ROOT}/examples)
+set(EXTERNAL_DIR ${PROJECT_ROOT}/external)
 
 # Include directories
 include_directories(${INCLUDE_DIR})
+
+# Pull in attitude math library if the submodule is present
+set(ATTITUDE_MATH_DIR ${EXTERNAL_DIR}/attitudeMathLibrary)
+if(EXISTS ${ATTITUDE_MATH_DIR}/CMakeLists.txt)
+    add_subdirectory(${ATTITUDE_MATH_DIR} ${CMAKE_BINARY_DIR}/attitudeMathLibrary)
+    include_directories(${ATTITUDE_MATH_DIR}/include)
+    set(HAVE_ATTITUDE_LIB ON)
+else()
+    set(HAVE_ATTITUDE_LIB OFF)
+endif()
 
 # Add source files for subsystems
 set(SRC_FILES
@@ -30,8 +43,18 @@ set(SRC_FILES
     ${SRC_DIR}/utilities/numerical_solver.c
 )
 
-# Create a shared library for dynamic models
-#add_library(dynamic_models ${SRC_FILES})
+add_library(dynamic_models STATIC ${SRC_FILES})
+target_include_directories(dynamic_models PUBLIC ${INCLUDE_DIR})
+
+if(HAVE_ATTITUDE_LIB)
+    target_link_libraries(dynamic_models PUBLIC attitude)
+endif()
+
+if(MSVC)
+    target_compile_definitions(dynamic_models PUBLIC _USE_MATH_DEFINES)
+else()
+    target_link_libraries(dynamic_models PUBLIC m)
+endif()
 
 # Add tests
 #enable_testing()

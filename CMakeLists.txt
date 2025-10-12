@@ -56,9 +56,16 @@ else()
     target_link_libraries(dynamic_models PUBLIC m)
 endif()
 
+# Examples
+add_executable(point_mass_example ${EXAMPLES_DIR}/point_mass/main.c)
+target_link_libraries(point_mass_example PRIVATE dynamic_models)
+
+add_executable(spring_pendulum_example ${EXAMPLES_DIR}/spring_pendulum/main.c)
+target_link_libraries(spring_pendulum_example PRIVATE dynamic_models)
+
 # Add tests
-#enable_testing()
-#add_subdirectory(${TEST_DIR})
+enable_testing()
+add_subdirectory(${TEST_DIR})
 
 # Add examples
 #add_executable(dynamic_models_example ${EXAMPLES_DIR}/main.c)

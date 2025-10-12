@@ -86,3 +86,44 @@ These placeholders will be replaced by higher-fidelity functions or lookup table
    git clone https://github.com/antshiv/dynamic_models.git
    cd dynamic_models
    git submodule update --init --recursive  # pulls attitudeMathLibrary
+   ```
+
+## Examples
+- `point_mass_example` – Uses the RK4 solver to integrate a 1D point mass under constant acceleration (see `examples/point_mass/main.c`). Build with `cmake --build . --target point_mass_example` and run the resulting binary to inspect the position/velocity timeline. This mirrors the hover axis before adding rotor thrust: replace the constant acceleration with `(ΣT - mg)/m` to transition into the full Newton–Euler model.
+- `spring_pendulum_example` – Simulates a mass on a spring in a gravity field to demonstrate coupled translational dynamics (see `examples/spring_pendulum/main.c`). Build with `cmake --build . --target spring_pendulum_example` and run the binary to observe damped oscillations sampled every 0.5 s.
+
+## Reference Tables
+
+### Example Dynamics Modules
+| Scenario | Purpose | Numerical Methods | Current Status |
+| --- | --- | --- | --- |
+| Point mass (1D) | Minimal translational plant for solver bring-up | Euler, RK4 | Implemented (`examples/point_mass`) |
+| Spring pendulum | Elastic pendulum showing coupled translation/rotation | Euler, RK4, adaptive RK | Implemented (`examples/spring_pendulum`) |
+| Inverted pendulum | Balancing benchmark for control loops | RK4, implicit Euler, model-predictive integrators | Planned (ties into controller-in-loop demos) |
+
+### Numerical Integration Methods
+| Method | Order | Stability Traits | Typical Use | Notes |
+| --- | --- | --- | --- | --- |
+| Forward Euler | 1st | Conditionally stable; fast but diffusive | Quick prototyping, sanity checks | Already exposed via `dm_integrate_euler` |
+| Classical RK4 | 4th | Good accuracy with fixed step sizes | Core solver for rigid-body propagation | Implemented as `dm_integrate_rk4` |
+| Adaptive RK (Dormand–Prince) | 5/4 pair | Step-size control improves efficiency | Planned upgrade for stiff scenarios | To be slotted into `utilities` once error control scaffold exists |
+| Implicit Euler / trapezoidal | 1st/2nd implicit | Unconditionally stable for stiff systems | Contact dynamics, inverted pendulum | Will require linear solver backend |
+
+### First-Principles Modeling Paths
+| Approach | Governing Equations | Strengths | Use Cases |
+| --- | --- | --- | --- |
+| Newtonian (force/torque balance) | `ΣF = m·a`, `Στ = I·α` | Direct mapping from FBD to dynamics; intuitive | Multirotor hover, motor thrust aggregation |
+| Lagrangian (energy based) | `d/dt(∂L/∂q̇) - ∂L/∂q = Q` | Handles constraints elegantly; symbolic friendly | Pendulum variants, flex modes, underactuated rigs |
+| Hamiltonian | `q̇ = ∂H/∂p`, `ṗ = -∂H/∂q + Q` | Explicit energy preservation; good for control canonical forms | Future optimal control and estimation pipelines |
+
+### FBD Composition Chain (Multirotor Example)
+| Block | FBD Summary | Purpose in Chain | Notes |
+| --- | --- | --- | --- |
+| Rotor disk | Thrust and drag forces along rotor axis | Converts motor torque/current to lift & reaction torque | Parameterized by `k_t`, `k_q`, or blade-element tables |
+| Motor/ESC | Electrical input vs. shaft torque | Captures lag and saturation in thrust commands | Links controller outputs to rotor FBD |
+| Arm + frame | Couples individual rotor forces into net body forces/torques | Builds body wrench from per-rotor thrust vectors | Geometry matrix maps rotor frame to body frame |
+| Rigid body | Summed forces/torques acting on CoM | Produces translational and rotational acceleration | Uses Newton–Euler or Lagrangian forms above |
+| Integrator | State propagation (position, velocity, attitude, rates) | Evolves vehicle state in time | Backed by chosen numerical method (Euler, RK4, etc.) |
+| Disturbance models | Wind, payload shifts, bias torques | Stress-tests robustness | Optional injection layer for later roadmap items |
+
+These tables act as a quick index: pick the FBD building blocks, choose the governing equations, and select an integration method to assemble models ranging from a 1D hover axis to a full quadcopter. The roadmap items will gradually populate the planned rows with concrete code and documentation.

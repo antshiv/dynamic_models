@@ -5,6 +5,7 @@ set(TEST_SOURCES
     ${TEST_DIR}/battery/test_battery_model.c
     ${TEST_DIR}/battery/test_battery_management.c
     ${TEST_DIR}/motor/test_motor_dynamics.c
+    ${TEST_DIR}/utilities/test_numerical_solvers.c
 )
 
 # Add each test as an executable

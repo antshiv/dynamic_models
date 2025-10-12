@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 #include "utilities/numerical_solvers.h"
 
 typedef struct {
@@ -39,6 +40,11 @@ static void test_euler_constant_acceleration(void) {
     const double expected_velocity = accel * dt * steps;
     const double expected_position = accel * dt * dt * steps * (steps - 1) / 2.0;
 
+    printf("[Euler] a=%.2f m/s^2, dt=%.3f s, steps=%d → pos=%.6f m (expected %.6f), "
+           "vel=%.6f m/s (expected %.6f)\n",
+           accel, dt, steps, state.position, expected_position,
+           state.velocity, expected_velocity);
+
     assert(nearly_equal(state.velocity, expected_velocity, 1e-12));
     assert(nearly_equal(state.position, expected_position, 1e-12));
 }
@@ -60,6 +66,11 @@ static void test_rk4_constant_acceleration(void) {
     const double expected_velocity = accel * total_time;
     const double expected_position = 0.5 * accel * total_time * total_time;
 
+    printf("[RK4] a=%.2f m/s^2, dt=%.3f s, total_time=%.2f s → pos=%.9f m "
+           "(expected %.9f), vel=%.9f m/s (expected %.9f)\n",
+           accel, dt, total_time, state.position, expected_position,
+           state.velocity, expected_velocity);
+
     assert(nearly_equal(state.velocity, expected_velocity, 1e-12));
     assert(nearly_equal(state.position, expected_position, 1e-9));
 }
@@ -75,6 +86,9 @@ static void test_rk4_missing_scratch_is_noop(void) {
     dm_integrate_rk4(&state, &accel, dt, sizeof(state),
                      point_mass_derivative, NULL,
                      NULL, &k2, &k3, &k4, &temp);
+
+    printf("[RK4] missing scratch buffers → state unchanged (pos=%.6f m, vel=%.6f m/s)\n",
+           state.position, state.velocity);
 
     assert(nearly_equal(state.position, initial.position, 1e-12));
     assert(nearly_equal(state.velocity, initial.velocity, 1e-12));

@@ -52,6 +52,20 @@ Add body forces/torques to the free-body diagram (FBD) before writing equations.
   Convenient for systems with constraints or generalized coordinates (pendula).
 
 ## 4. Typical Equation Patterns
+### Moments & Lever Arms
+- **Torque is a rotational measure of force:** `τ = r × F`, where `r` is the
+  lever arm vector from the pivot/CoM to the point of application. A torque has
+  units of N·m—it is not a new “type” of force, but the rotational effect of a
+  force applied at a distance.
+- **Intuition:** removing a lug nut, pedaling a bicycle, or a rotor pushing on
+  a quadcopter arm are all force-at-distance examples. Longer lever arms or
+  larger forces produce larger torque.
+- For quadcopters, each rotor thrust produces a moment about the center using
+  the arm vector (e.g., `τ_roll = l * (T_right - T_left)`). Reaction torques
+  from the rotors (`Q = k_q·ω²`) contribute to yaw.
+- These torques appear alongside external moments (aero coefficients, damping)
+  in the rotational Newton–Euler equation `I·ω̇ + ω × (I·ω) = τ_body`.
+
 | System | Coordinates | Governing Equation(s) | Notes |
 | --- | --- | --- | --- |
 | Spring–mass | `x` | `m·ẍ + c·ẋ + k·x = F_ext` | Add constant offset for gravity: equilibrium `x_eq = mg/k`. |

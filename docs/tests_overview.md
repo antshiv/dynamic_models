@@ -42,3 +42,6 @@ quaternion/Euler conversion utilities:
 
 Combine this page with `docs/free_body_diagrams.md` to map the test quantities
 back to their physical interpretations.
+
+For a quick-reference summary stored alongside the sources, see
+`tests/README.md`.

@@ -25,6 +25,7 @@ The table below mirrors the current executables in `build/tests/`.
 | `test_battery_model` | Placeholder for battery plant dynamics. | – | Outputs `[TODO] battery model tests pending implementation.` |
 | `test_battery_management` | Placeholder for battery management logic. | – | Outputs `[TODO] battery management tests pending implementation.` |
 | `test_motor_dynamics` | Placeholder for motor/ESC dynamics. | – | Outputs `[TODO] motor dynamics tests pending implementation.` |
+| `test_point_mass_linear` | Confirms the analytic state-space matrices for the 1D point mass and checks error handling. | Mass `m = 1.2 kg`. | Logs the matrices, asserts `A = [[0,1],[0,0]]`, `B = [[0],[1/m]]`, `C = I`, `D = 0`, and verifies error codes on invalid inputs. |
 
 The `attitudeMathLibrary` submodule ships its own test binaries (located under
 `build/attitudeMathLibrary/`). Their focus and output format are described in

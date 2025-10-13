@@ -15,6 +15,7 @@ printed numbers.
 | `test_battery_model` | Placeholder for future battery plant verification. | None yet. | Outputs `[TODO]` marker. |
 | `test_battery_management` | Placeholder for BMS logic tests. | None yet. | Outputs `[TODO]` marker. |
 | `test_motor_dynamics` | Placeholder for motor/ESC dynamic response checks. | None yet. | Outputs `[TODO]` marker. |
+| `test_point_mass_linear` | Verifies the generated `A`, `B`, `C`, `D` matrices for the point-mass state-space model and exercises error handling. | Mass parameter (`m = 1.2 kg`). | Prints the matrices and asserts they match the analytic derivation; confirms error codes for invalid inputs. |
 
 As the subsystem implementations arrive, each placeholder will be replaced by
 real assertions (and the `[TODO]` prints removed).

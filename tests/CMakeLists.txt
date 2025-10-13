@@ -7,6 +7,7 @@ set(TEST_SOURCES
     ${TEST_DIR}/motor/test_motor_dynamics.c
     ${TEST_DIR}/utilities/test_numerical_solvers.c
     ${TEST_DIR}/linear/test_point_mass_linear.c
+    ${TEST_DIR}/linear/test_spring_pendulum_linear.c
 )
 
 # Add each test as an executable

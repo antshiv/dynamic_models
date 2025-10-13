@@ -74,11 +74,12 @@ These placeholders will be replaced by higher-fidelity functions or lookup table
 6. **Iterate fidelity** – Refine `k_t`, `k_q`, and motor dynamics via theory or test data without changing the surrounding structure.
 
 ## Roadmap
-1. JSON-based vehicle configuration loader that populates the hover graph.
-2. Newton–Euler core implementation with unit tests and hover equilibrium checks.
-3. Simulation harness for step/sine inputs with CSV output for analysis (Python/SciPy or Octave).
-4. Motor/propulsion upgrades: replace constants with measured or blade-element models.
-5. Extend to lateral dynamics, wind disturbances, and alternative airframes.
+1. State-space toolkit: linearize the spring pendulum, inverted pendulum, and double pendulum around their operating points and expose `(A,B,C,D)` helpers (point mass already done).
+2. Quaternion-aware rigid-body propagation: integrate the attitudeMathLibrary quaternions into the RK4 integrator with normalization each step to avoid gimbal lock.
+3. Motor/ESC dynamics: implement first-order lag (`τ·ω̇ + ω = ω_cmd`) and extend with measured propeller thrust/drag maps.
+4. JSON-based vehicle configuration loader to drive the hover computation graph and examples with real hardware parameters.
+5. CLI automation: generate state-space/Laplace models, step/Bode plots, and regression comparisons directly from configuration files.
+6. Extend to lateral dynamics, wind disturbances, and alternative airframes once the above layers are stable.
 
 ## Building
 1. Clone the repository:

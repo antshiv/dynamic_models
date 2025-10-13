@@ -16,6 +16,7 @@ printed numbers.
 | `test_battery_management` | Placeholder for BMS logic tests. | None yet. | Outputs `[TODO]` marker. |
 | `test_motor_dynamics` | Placeholder for motor/ESC dynamic response checks. | None yet. | Outputs `[TODO]` marker. |
 | `test_point_mass_linear` | Verifies the generated `A`, `B`, `C`, `D` matrices for the point-mass state-space model and exercises error handling. | Mass parameter (`m = 1.2 kg`). | Prints the matrices and asserts they match the analytic derivation; confirms error codes for invalid inputs. |
+| `test_spring_pendulum_linear` | Checks the spring pendulum linearization about the hanging equilibrium and validates the reported equilibrium state. | `m = 0.5 kg`, `k = 15 N/m`, `c = 0.3 N·s/m`, `L₀ = 0.5 m`, `g = 9.81 m/s²`. | Compares `A`, `B`, `C`, `D` entries against analytic formulas and exercises error handling paths. |
 
 As the subsystem implementations arrive, each placeholder will be replaced by
 real assertions (and the `[TODO]` prints removed).

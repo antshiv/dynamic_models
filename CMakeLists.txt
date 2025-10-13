@@ -42,6 +42,7 @@ set(SRC_FILES
     ${SRC_DIR}/battery/battery_management.c
     ${SRC_DIR}/utilities/numerical_solver.c
     ${SRC_DIR}/linear/point_mass_linear.c
+    ${SRC_DIR}/linear/spring_pendulum_linear.c
 )
 
 add_library(dynamic_models STATIC ${SRC_FILES})

@@ -376,6 +376,148 @@ static void test_double_pendulum_adaptive_energy(void) {
     assert(adaptive_error <= 1e-2);
 }
 
+typedef struct {
+    double x;
+    double theta;
+    double x_dot;
+    double theta_dot;
+} inverted_pendulum_state_t;
+
+typedef struct {
+    double mass_cart;
+    double mass_pole;
+    double length;
+    double gravity;
+    double cart_force;
+    double damping_cart;
+    double damping_pole;
+} inverted_pendulum_params_t;
+
+static void inverted_pendulum_derivative(const void* state,
+                                         const void* input,
+                                         void* state_dot,
+                                         void* user_ctx) {
+    (void)user_ctx;
+    const inverted_pendulum_state_t* s = (const inverted_pendulum_state_t*)state;
+    const inverted_pendulum_params_t* p =
+        (const inverted_pendulum_params_t*)input;
+    inverted_pendulum_state_t* out = (inverted_pendulum_state_t*)state_dot;
+
+    const double M = p->mass_cart;
+    const double m = p->mass_pole;
+    const double l = p->length;
+    const double g = p->gravity;
+    const double F = p->cart_force;
+    const double b_cart = p->damping_cart;
+    const double b_pole = p->damping_pole;
+
+    const double theta = s->theta;
+    const double theta_dot = s->theta_dot;
+    const double x_dot = s->x_dot;
+
+    const double sin_theta = sin(theta);
+    const double cos_theta = cos(theta);
+
+    const double total_mass = M + m;
+    const double pole_mass_length = m * l;
+
+    const double temp =
+        (F - b_cart * x_dot + pole_mass_length * theta_dot * theta_dot * sin_theta) / total_mass;
+    const double denominator =
+        l * (4.0 / 3.0 - (m * cos_theta * cos_theta) / total_mass);
+
+    const double theta_double_dot =
+        (g * sin_theta - cos_theta * temp - (b_pole * theta_dot) / pole_mass_length) / denominator;
+
+    const double x_double_dot =
+        temp - (pole_mass_length * theta_double_dot * cos_theta) / total_mass;
+
+    out->x = x_dot;
+    out->theta = theta_dot;
+    out->x_dot = x_double_dot;
+    out->theta_dot = theta_double_dot;
+}
+
+static dm_rk45_params_t default_rk45_params(void) {
+    dm_rk45_params_t params = {
+        .abs_tol = 1e-6,
+        .rel_tol = 1e-6,
+        .min_dt = 1e-6,
+        .max_dt = 0.05,
+        .safety = 0.9,
+        .shrink_limit = 0.2,
+        .growth_limit = 5.0,
+        .max_attempts = 12,
+    };
+    return params;
+}
+
+static void integrate_rk4_inv_pend(inverted_pendulum_state_t* state,
+                                   const inverted_pendulum_params_t* params,
+                                   double dt,
+                                   size_t steps) {
+    inverted_pendulum_state_t k1, k2, k3, k4, temp;
+    for (size_t i = 0; i < steps; ++i) {
+        dm_integrate_rk4(state, params, dt, sizeof(*state),
+                         inverted_pendulum_derivative, NULL,
+                         &k1, &k2, &k3, &k4, &temp);
+    }
+}
+
+static void test_inverted_pendulum_adaptive(void) {
+    const inverted_pendulum_params_t params = {
+        .mass_cart = 1.0,
+        .mass_pole = 0.1,
+        .length = 0.5,
+        .gravity = 9.81,
+        .cart_force = 0.0,
+        .damping_cart = 0.05,
+        .damping_pole = 0.002,
+    };
+
+    const double total_time = 5.0;
+
+    inverted_pendulum_state_t state_ref = {
+        .x = 0.0,
+        .theta = 5.0 * M_PI / 180.0,
+        .x_dot = 0.0,
+        .theta_dot = 0.0,
+    };
+
+    inverted_pendulum_state_t state_adapt = state_ref;
+
+    const double rk4_dt = 0.001;
+    const size_t rk4_steps = (size_t)(total_time / rk4_dt);
+    integrate_rk4_inv_pend(&state_ref, &params, rk4_dt, rk4_steps);
+
+    const double adapt_dt = 0.05;
+    const size_t adapt_steps = (size_t)(total_time / adapt_dt);
+    const dm_rk45_params_t rk_params = default_rk45_params();
+
+    for (size_t i = 0; i < adapt_steps; ++i) {
+        const int status = dm_integrate_rk45_adaptive(&state_adapt, &params,
+                                                      adapt_dt, sizeof(state_adapt),
+                                                      inverted_pendulum_derivative, NULL,
+                                                      &rk_params);
+        assert(status == 0);
+    }
+
+    const double dx = fabs(state_ref.x - state_adapt.x);
+    const double dtheta = fabs(state_ref.theta - state_adapt.theta);
+    const double dx_dot = fabs(state_ref.x_dot - state_adapt.x_dot);
+    const double dtheta_dot = fabs(state_ref.theta_dot - state_adapt.theta_dot);
+
+    printf("[Inverted Pendulum] RK4 vs RK45 differences: |dx|=%.6e, |dθ|=%.6e, |dẋ|=%.6e, |dθ̇|=%.6e\n",
+           dx, dtheta, dx_dot, dtheta_dot);
+
+    const double tol_pos = 5e-4;
+    const double tol_vel = 5e-4;
+    assert(dx <= tol_pos);
+    assert(dtheta <= tol_pos);
+    assert(dx_dot <= tol_vel);
+    assert(dtheta_dot <= tol_vel);
+}
+
 int main(void) {
     puts("=== Numerical Solver Regression ===");
     puts("Scenario 1: Point mass under constant thrust (FBD: mass with upward thrust T and weight mg).");
@@ -384,11 +526,14 @@ int main(void) {
     puts("  Equations: m·r_ddot = -k(r-L0)·r_hat - c·v - m·g·j; total energy should monotonically decrease.");
     puts("Scenario 3: Planar double pendulum (two linked masses, gravity).");
     puts("  Coupled Lagrange equations integrated via RK4 vs. adaptive RK45; energy conservation favors adaptive.");
+    puts("Scenario 4: Inverted pendulum on a cart (upright equilibrium).");
+    puts("  Nonlinear balance of cart force and gravity; adaptive RK45 maintains bounded energy with damping.");
     puts("==============================================================");
     test_euler_constant_acceleration();
     test_rk4_constant_acceleration();
     test_rk4_missing_scratch_is_noop();
     test_spring_pendulum_energy_decay();
     test_double_pendulum_adaptive_energy();
+    test_inverted_pendulum_adaptive();
     return 0;
 }

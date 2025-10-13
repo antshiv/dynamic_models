@@ -66,6 +66,9 @@ target_link_libraries(spring_pendulum_example PRIVATE dynamic_models)
 add_executable(double_pendulum_example ${EXAMPLES_DIR}/double_pendulum/main.c)
 target_link_libraries(double_pendulum_example PRIVATE dynamic_models)
 
+add_executable(inverted_pendulum_example ${EXAMPLES_DIR}/inverted_pendulum/main.c)
+target_link_libraries(inverted_pendulum_example PRIVATE dynamic_models)
+
 # Add tests
 enable_testing()
 add_subdirectory(${TEST_DIR})

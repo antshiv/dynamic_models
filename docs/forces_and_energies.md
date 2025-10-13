@@ -32,6 +32,7 @@ reasoning about the dynamics.
 | Spring (Hooke’s law) | `F_s = -k·x` | `x` is displacement from rest length. | 1D spring, spring pendulum |
 | Vector spring | `F_s = -k·(r - L₀)·r̂` | Points along the tether; used for the pendulum’s elastic force. | Spring pendulum |
 | Damping | `F_d = -c·v` | Opposes velocity; removes energy. | Spring pendulum |
+| Cart force | `F = M·ẍ + m·l·θ̈·cosθ - m·l·θ̇²·sinθ + b·ẋ` | Horizontal balance for cart-pole; couples cart motion to pole torque. | Inverted pendulum |
 
 ## Pendulum-Specific Relations
 | Quantity | Expression | Context |
@@ -39,6 +40,7 @@ reasoning about the dynamics.
 | Angle-to-position | `x = l·sinθ`, `y = -l·cosθ` | Converts pendulum angle to Cartesian coordinates. |
 | Kinetic energy (single link) | `T = ½·m·l²·ω²` | Angular kinetic energy. |
 | Double-link kinetic energy | `T = ½·m₁·l₁²·ω₁² + ½·m₂·(v₁² + v₂² + 2·l₁·l₂·ω₁·ω₂·cos(θ₁-θ₂))` | Captures coupling between links. |
+| Cart-pole torque | `τ = m·l·g·sinθ + m·l·ẍ·cosθ - c_p·θ̇` | Governs upright balance with damping. |
 
 ## Energy Equivalences
 | Equality | Meaning | Example |
@@ -52,6 +54,8 @@ reasoning about the dynamics.
 - **Point mass:** uses `F = m·a`, thrust work, and gravitational weight.
 - **Spring pendulum:** adds Hooke’s law, damping, and energy decomposition.
 - **Double pendulum:** introduces coupled angular equations and shared energy.
+- **Inverted pendulum:** adds cart forces/damping balancing gravity near the
+  upright configuration.
 - **Rotorcraft roadmap:** will combine thrust (`k_t·ω²`), torque balances,
   and inertia tensors (`τ = I·α`) to model roll/pitch/yaw.
 

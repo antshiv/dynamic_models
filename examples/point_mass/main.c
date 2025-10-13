@@ -22,20 +22,29 @@ static void point_mass_derivative(const void* state,
 int main(void) {
     point_mass_state_t state = {.position = 0.0, .velocity = 0.0};
     const double accel = 2.0;  // m/s^2
+    const double mass = 1.0;   // kg
     const double dt = 0.1;     // seconds
     const int steps = 20;
 
     point_mass_state_t k1, k2, k3, k4, temp;
 
-    printf("Point mass under constant acceleration (a = %.2f m/s^2)\n", accel);
-    printf("%6s %12s %12s\n", "Time", "Position (m)", "Velocity (m/s)");
+    const double force = mass * accel;
+
+    printf("Point mass under constant acceleration (a = %.2f m/s^2, m = %.2f kg)\n",
+           accel, mass);
+    printf("%6s %12s %12s %16s %16s\n",
+           "Time", "Position (m)", "Velocity (m/s)",
+           "Kinetic E (J)", "Work Done (J)");
 
     for (int i = 0; i < steps; ++i) {
         dm_integrate_rk4(&state, &accel, dt, sizeof(state),
                          point_mass_derivative, NULL,
                          &k1, &k2, &k3, &k4, &temp);
         double t = (i + 1) * dt;
-        printf("%6.2f %12.6f %12.6f\n", t, state.position, state.velocity);
+        const double kinetic = 0.5 * mass * state.velocity * state.velocity;
+        const double work = force * state.position;
+        printf("%6.2f %12.6f %12.6f %16.6f %16.6f\n",
+               t, state.position, state.velocity, kinetic, work);
     }
 
     return 0;

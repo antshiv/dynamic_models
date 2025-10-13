@@ -62,6 +62,42 @@ static void spring_pendulum_derivative(const void* state,
     out->vy = ay;
 }
 
+static void spring_pendulum_energy(const spring_pendulum_state_t* state,
+                                   const spring_pendulum_params_t* params,
+                                   double* kinetic_out,
+                                   double* spring_potential_out,
+                                   double* gravity_potential_out,
+                                   double* total_out) {
+    const double mass = params->mass;
+    const double stiffness = params->stiffness;
+    const double rest_length = params->rest_length;
+    const double gravity = params->gravity;
+
+    const double vx2 = state->vx * state->vx;
+    const double vy2 = state->vy * state->vy;
+    const double kinetic = 0.5 * mass * (vx2 + vy2);
+
+    const double r_len = sqrt(state->x * state->x + state->y * state->y);
+    const double stretch = r_len - rest_length;
+    const double spring_pe = 0.5 * stiffness * stretch * stretch;
+
+    const double gravity_pe = mass * gravity * state->y;
+    const double total = kinetic + spring_pe + gravity_pe;
+
+    if (kinetic_out) {
+        *kinetic_out = kinetic;
+    }
+    if (spring_potential_out) {
+        *spring_potential_out = spring_pe;
+    }
+    if (gravity_potential_out) {
+        *gravity_potential_out = gravity_pe;
+    }
+    if (total_out) {
+        *total_out = total;
+    }
+}
+
 int main(void) {
     spring_pendulum_state_t state = {
         .x = 0.2,
@@ -85,18 +121,27 @@ int main(void) {
 
     printf("Spring pendulum (mass=%.2f kg, k=%.2f N/m, rest=%.2f m)\n",
            params.mass, params.stiffness, params.rest_length);
-    printf("%6s %12s %12s %12s %12s\n",
-           "Time", "X (m)", "Y (m)", "Vx (m/s)", "Vy (m/s)");
+    printf("%6s %12s %12s %12s %12s %14s %14s %14s %14s\n",
+           "Time", "X (m)", "Y (m)", "Vx (m/s)", "Vy (m/s)",
+           "KE (J)", "Spring PE (J)", "Grav. PE (J)", "Total E (J)");
 
     double time = 0.0;
+    double kinetic = 0.0;
+    double spring_pe = 0.0;
+    double gravity_pe = 0.0;
+    double total_e = 0.0;
+
     for (int i = 0; i < steps; ++i) {
         dm_integrate_rk4(&state, &params, dt, sizeof(state),
                          spring_pendulum_derivative, NULL,
                          &k1, &k2, &k3, &k4, &temp);
         time += dt;
         if ((i + 1) % 50 == 0) {
-            printf("%6.2f %12.6f %12.6f %12.6f %12.6f\n",
-                   time, state.x, state.y, state.vx, state.vy);
+            spring_pendulum_energy(&state, &params,
+                                   &kinetic, &spring_pe, &gravity_pe, &total_e);
+            printf("%6.2f %12.6f %12.6f %12.6f %12.6f %14.6f %14.6f %14.6f %14.6f\n",
+                   time, state.x, state.y, state.vx, state.vy,
+                   kinetic, spring_pe, gravity_pe, total_e);
         }
     }
 

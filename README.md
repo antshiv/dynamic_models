@@ -92,8 +92,7 @@ These placeholders will be replaced by higher-fidelity functions or lookup table
 - `point_mass_example` – Uses the RK4 solver to integrate a 1D point mass under constant acceleration (see `examples/point_mass/main.c`). Build with `cmake --build . --target point_mass_example` and run the resulting binary to inspect the position/velocity timeline. This mirrors the hover axis before adding rotor thrust: replace the constant acceleration with `(ΣT - mg)/m` to transition into the full Newton–Euler model.
 - `spring_pendulum_example` – Simulates a mass on a spring in a gravity field to demonstrate coupled translational dynamics (see `examples/spring_pendulum/main.c`). Build with `cmake --build . --target spring_pendulum_example` and run the binary to observe damped oscillations sampled every 0.5 s.
 
-See `docs/free_body_diagrams.md` for ASCII sketches of the point mass, spring pendulum, and forthcoming inverted pendulum free-body diagrams, along with inertia references for multirotors. A deeper narrative on integrators lives in `docs/numerical_methods.md`.
-Refer to `docs/tests_overview.md` when you want a quick description of each unit test executable and its expected console output.
+See `docs/free_body_diagrams.md` for ASCII sketches of the point mass, spring pendulum, and forthcoming inverted pendulum free-body diagrams, along with inertia references for multirotors. A deeper narrative on integrators lives in `docs/numerical_methods.md`. Solver validation snippets for the examples are collected in `docs/examples.md`. Refer to `docs/tests_overview.md` when you want a quick description of each unit test executable and its expected console output.
 
 ## Reference Tables
 

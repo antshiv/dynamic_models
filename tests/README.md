@@ -19,7 +19,7 @@ The table below mirrors the current executables in `build/tests/`.
 
 | Executable | What it Covers | Inputs | Expected Output |
 | --- | --- | --- | --- |
-| `test_numerical_solvers` | Validates the explicit Euler and RK4 integrators on a 1D constant-acceleration system. Also checks that RK4 refuses to run if scratch buffers are missing. | Acceleration `a = 2 m/s²`, step size `dt = 0.01 s`, iteration count `steps = 100`. | Prints both simulated and closed-form position/velocity values and asserts they match within `1e-12` (Euler) / `1e-9` (RK4). Logs a message confirming the "missing scratch" guard leaves the state unchanged. |
+| `test_numerical_solvers` | Validates explicit Euler/RK4 on a 1D constant-acceleration system, enforces energy decay on the damped spring pendulum, and compares fixed-step RK4 against adaptive RK45 on the double pendulum. A preamble explains each scenario, governing formulas, and the FBD elements involved. | Point mass: `a = 2 m/s²`, `dt = 0.01 s`, `steps = 100`. Spring pendulum: matches example parameters. Double pendulum: 5 s horizon with 0.05 s macro step. | Prints simulated vs. analytic trajectories, energy balance for each scenario, and shows that the adaptive solver reduces double-pendulum energy drift to <`1e-2` J. |
 | `test_physics_model` | Placeholder until the rigid-body physics implementation lands. | – | Outputs `[TODO] physics model verification pending implementation.` |
 | `test_neural_state_space` | Placeholder for neural state-space identification utilities. | – | Outputs `[TODO] neural state-space tests pending implementation.` |
 | `test_battery_model` | Placeholder for battery plant dynamics. | – | Outputs `[TODO] battery model tests pending implementation.` |
@@ -33,5 +33,6 @@ The `attitudeMathLibrary` submodule ships its own test binaries (located under
 ## Next Steps
 - Replace each placeholder executable with targeted assertions once the
   corresponding subsystem is implemented.
-- Expand the numerical solver test to cover additional trajectories (e.g., the
-  spring pendulum energy profile) as the utilities layer grows.
+- Extend the adaptive RK coverage to future models (inverted pendulum,
+  quadrotor attitude) and promote the energy checks to regression plots once
+  the CLI tooling lands.

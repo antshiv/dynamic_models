@@ -2,7 +2,9 @@
 
 This document captures the numerical checks that accompany the example
 executables. Use it alongside `docs/numerical_methods.md` and
-`docs/free_body_diagrams.md` when inspecting solver accuracy.
+`docs/free_body_diagrams.md` when inspecting solver accuracy. Each example
+accepts an optional command-line argument with a CSV file path; when provided,
+the full time series is recorded for plotting or CLI-driven reports.
 
 ## Point Mass Constant Acceleration
 - **Scenario:** 1 kg mass subject to constant thrust producing `a = 2 m/s²`.
@@ -29,6 +31,20 @@ executables. Use it alongside `docs/numerical_methods.md` and
   - Unit test `test_spring_pendulum_energy_decay` ensures the total mechanical
     energy decays monotonically (allowing ≤10⁻⁶ J numerical noise) and logs the
     initial/final energy gap. This confirms damping removes energy as expected.
+
+## Planar Double Pendulum
+- **Scenario:** Two 1 kg links (`l₁ = l₂ = 1 m`) with gravity, starting from
+  `θ₁ = θ₂ = π/2` and zero velocities.
+- **Integrator:** `dm_integrate_rk4` in the example; adaptive Dormand–Prince
+  (`dm_integrate_rk45_adaptive`) in the test harness.
+- **Energies:** Kinetic energy combines link velocities while potential uses
+  `mgy` for each mass relative to the pivot height.
+- **Validation:**  
+  - Example prints angles, angular rates, and energy components every 0.2 s,
+    and emits a CSV when a file path argument is supplied.  
+  - Unit test `test_double_pendulum_adaptive_energy` compares fixed-step RK4 and
+    adaptive RK45 over 5 s; the adaptive method reduces energy drift by over an
+    order of magnitude (<10⁻² J absolute error).
 
 ## Next Steps
 - Once the double pendulum and inverted pendulum stages are implemented, extend

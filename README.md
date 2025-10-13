@@ -91,8 +91,10 @@ These placeholders will be replaced by higher-fidelity functions or lookup table
 ## Examples
 - `point_mass_example` – Uses the RK4 solver to integrate a 1D point mass under constant acceleration (see `examples/point_mass/main.c`). Build with `cmake --build . --target point_mass_example` and run the resulting binary to inspect the position/velocity timeline. This mirrors the hover axis before adding rotor thrust: replace the constant acceleration with `(ΣT - mg)/m` to transition into the full Newton–Euler model.
 - `spring_pendulum_example` – Simulates a mass on a spring in a gravity field to demonstrate coupled translational dynamics (see `examples/spring_pendulum/main.c`). Build with `cmake --build . --target spring_pendulum_example` and run the binary to observe damped oscillations sampled every 0.5 s.
+- `double_pendulum_example` – Captures chaotic two-link dynamics with RK4 integration and energy monitoring (see `examples/double_pendulum/main.c`). Build with `cmake --build . --target double_pendulum_example` and run the binary to inspect angle/rate/energy traces (optional CSV output supported by passing a file path argument to any example).
+All examples accept an optional command-line argument with a CSV file path; when provided, the simulation streams the full time series for downstream plotting.
 
-See `docs/free_body_diagrams.md` for ASCII sketches of the point mass, spring pendulum, and forthcoming inverted pendulum free-body diagrams, along with inertia references for multirotors. A deeper narrative on integrators lives in `docs/numerical_methods.md`. Solver validation snippets for the examples are collected in `docs/examples.md`. Refer to `docs/tests_overview.md` when you want a quick description of each unit test executable and its expected console output.
+See `docs/free_body_diagrams.md` for ASCII sketches of the point mass, spring pendulum, and forthcoming inverted pendulum free-body diagrams, along with inertia references for multirotors. `docs/forces_and_energies.md` collects the key force/energy identities (thrust, weight, Hooke’s law, damping, torque) so you can translate between FBDs and algebra quickly. A deeper narrative on integrators lives in `docs/numerical_methods.md`. Solver validation snippets for the examples are collected in `docs/examples.md`. Refer to `docs/tests_overview.md` when you want a quick description of each unit test executable and its expected console output.
 
 ## Reference Tables
 
@@ -102,7 +104,7 @@ See `docs/free_body_diagrams.md` for ASCII sketches of the point mass, spring pe
 | Point mass (1D) | Minimal translational plant for solver bring-up | Euler, RK4 | Implemented (`examples/point_mass`) |
 | Spring pendulum | Elastic pendulum showing coupled translation/rotation | Euler, RK4, adaptive RK | Implemented (`examples/spring_pendulum`) |
 | Inverted pendulum | Balancing benchmark for control loops | RK4, implicit Euler, model-predictive integrators | Planned (ties into controller-in-loop demos) |
-| Planar double pendulum | Energy exchange and chaos benchmark | RK4, adaptive RK | Planned (stress-test for error-controlled integrators) |
+| Planar double pendulum | Energy exchange and chaos benchmark | RK4, adaptive RK | Implemented (`examples/double_pendulum`) |
 
 ### Numerical Integration Methods
 | Method | Order | Stability Traits | Typical Use | Notes |

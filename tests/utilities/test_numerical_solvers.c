@@ -104,6 +104,94 @@ static double spring_total_energy(const spring_pendulum_state_t* state,
     return kinetic + spring_pe + gravity_pe;
 }
 
+typedef struct {
+    double theta1;
+    double theta2;
+    double omega1;
+    double omega2;
+} double_pendulum_state_t;
+
+typedef struct {
+    double mass1;
+    double mass2;
+    double length1;
+    double length2;
+    double gravity;
+} double_pendulum_params_t;
+
+static void double_pendulum_derivative(const void* state,
+                                       const void* input,
+                                       void* state_dot,
+                                       void* user_ctx) {
+    (void)user_ctx;
+    const double_pendulum_state_t* s = (const double_pendulum_state_t*)state;
+    const double_pendulum_params_t* params =
+        (const double_pendulum_params_t*)input;
+    double_pendulum_state_t* out = (double_pendulum_state_t*)state_dot;
+
+    const double m1 = params->mass1;
+    const double m2 = params->mass2;
+    const double l1 = params->length1;
+    const double l2 = params->length2;
+    const double g = params->gravity;
+
+    const double theta1 = s->theta1;
+    const double theta2 = s->theta2;
+    const double omega1 = s->omega1;
+    const double omega2 = s->omega2;
+
+    const double delta = theta1 - theta2;
+    const double sin_delta = sin(delta);
+    const double cos_delta = cos(delta);
+
+    const double denom = l1 * (2.0 * m1 + m2 - m2 * cos(2.0 * delta));
+    const double denom2 = l2 * (2.0 * m1 + m2 - m2 * cos(2.0 * delta));
+
+    const double term1 = -g * (2.0 * m1 + m2) * sin(theta1);
+    const double term2 = -m2 * g * sin(theta1 - 2.0 * theta2);
+    const double term3 = -2.0 * sin_delta * m2 *
+                         (omega2 * omega2 * l2 + omega1 * omega1 * l1 * cos_delta);
+    const double alpha1 = (term1 + term2 + term3) / denom;
+
+    const double term4 = 2.0 * sin_delta *
+        (omega1 * omega1 * l1 * (m1 + m2) +
+         g * (m1 + m2) * cos(theta1) +
+         omega2 * omega2 * l2 * m2 * cos_delta);
+    const double alpha2 = term4 / denom2;
+
+    out->theta1 = omega1;
+    out->theta2 = omega2;
+    out->omega1 = alpha1;
+    out->omega2 = alpha2;
+}
+
+static double double_pendulum_total_energy(const double_pendulum_state_t* state,
+                                           const double_pendulum_params_t* params) {
+    const double m1 = params->mass1;
+    const double m2 = params->mass2;
+    const double l1 = params->length1;
+    const double l2 = params->length2;
+    const double g = params->gravity;
+
+    const double theta1 = state->theta1;
+    const double theta2 = state->theta2;
+    const double omega1 = state->omega1;
+    const double omega2 = state->omega2;
+
+    const double v1_sq = l1 * l1 * omega1 * omega1;
+    const double v2_sq = v1_sq +
+        l2 * l2 * omega2 * omega2 +
+        2.0 * l1 * l2 * omega1 * omega2 * cos(theta1 - theta2);
+
+    const double kinetic = 0.5 * m1 * v1_sq + 0.5 * m2 * v2_sq;
+
+    const double y1 = -l1 * cos(theta1);
+    const double y2 = y1 - l2 * cos(theta2);
+    const double potential = m1 * g * y1 + m2 * g * y2;
+
+    return kinetic + potential;
+}
+
 static void test_euler_constant_acceleration(void) {
     point_mass_state_t state = {.position = 0.0, .velocity = 0.0};
     point_mass_state_t deriv = {.position = 0.0, .velocity = 0.0};
@@ -237,10 +325,70 @@ static void test_spring_pendulum_energy_decay(void) {
     assert(max_increase <= 1e-6);
 }
 
+static void test_double_pendulum_adaptive_energy(void) {
+    const double_pendulum_params_t params = {
+        .mass1 = 1.0,
+        .mass2 = 1.0,
+        .length1 = 1.0,
+        .length2 = 1.0,
+        .gravity = 9.81,
+    };
+
+    double_pendulum_state_t fixed_state = {
+        .theta1 = M_PI / 2.0,
+        .theta2 = M_PI / 2.0,
+        .omega1 = 0.0,
+        .omega2 = 0.0,
+    };
+
+    double_pendulum_state_t adaptive_state = fixed_state;
+
+    const double total_time = 5.0;
+    const double step_dt = 0.05;
+    const size_t steps = (size_t)(total_time / step_dt);
+
+    double_pendulum_state_t k1, k2, k3, k4, temp;
+
+    const double initial_energy = double_pendulum_total_energy(&fixed_state, &params);
+
+    for (size_t i = 0; i < steps; ++i) {
+        dm_integrate_rk4(&fixed_state, &params, step_dt, sizeof(fixed_state),
+                         double_pendulum_derivative, NULL,
+                         &k1, &k2, &k3, &k4, &temp);
+
+        const int status = dm_integrate_rk45_adaptive(&adaptive_state, &params,
+                                                      step_dt, sizeof(adaptive_state),
+                                                      double_pendulum_derivative, NULL,
+                                                      NULL);
+        assert(status == 0);
+    }
+
+    const double fixed_energy = double_pendulum_total_energy(&fixed_state, &params);
+    const double adaptive_energy = double_pendulum_total_energy(&adaptive_state, &params);
+
+    const double fixed_error = fabs(fixed_energy - initial_energy);
+    const double adaptive_error = fabs(adaptive_energy - initial_energy);
+
+    printf("[Double Pendulum] fixed-step energy error=%.6f J, adaptive error=%.6f J\n",
+           fixed_error, adaptive_error);
+
+    assert(adaptive_error <= fixed_error);
+    assert(adaptive_error <= 1e-2);
+}
+
 int main(void) {
+    puts("=== Numerical Solver Regression ===");
+    puts("Scenario 1: Point mass under constant thrust (FBD: mass with upward thrust T and weight mg).");
+    puts("  Governing equations: m·x_ddot = T - mg, analytic solution x(t) = 0.5·a·t^2, v(t) = a·t.");
+    puts("Scenario 2: Damped spring pendulum (FBD: mass on spring with damping, gravity, and elastic force).");
+    puts("  Equations: m·r_ddot = -k(r-L0)·r_hat - c·v - m·g·j; total energy should monotonically decrease.");
+    puts("Scenario 3: Planar double pendulum (two linked masses, gravity).");
+    puts("  Coupled Lagrange equations integrated via RK4 vs. adaptive RK45; energy conservation favors adaptive.");
+    puts("==============================================================");
     test_euler_constant_acceleration();
     test_rk4_constant_acceleration();
     test_rk4_missing_scratch_is_noop();
     test_spring_pendulum_energy_decay();
+    test_double_pendulum_adaptive_energy();
     return 0;
 }

@@ -9,7 +9,7 @@ printed numbers.
 
 | Executable | Description | Key Inputs | Output / Expectation |
 | --- | --- | --- | --- |
-| `test_numerical_solvers` | Verifies the Euler and RK4 integrators on a 1D constant-acceleration plant. | Acceleration `a = 2 m/s²`, `dt = 0.01 s`, `steps = 100`. | Prints the simulated position/velocity versus closed-form values and asserts they match to machine precision. Also confirms RK4 refuses to step when scratch buffers are missing. |
+| `test_numerical_solvers` | Verifies the Euler and RK4 integrators on a 1D constant-acceleration plant, checks spring-pendulum energy decay, and compares fixed-step vs. adaptive RK on the double pendulum. The executable prints a preamble summarizing each scenario, the governing equations, and the associated FBD context. | Point mass: `a = 2 m/s²`, `dt = 0.01 s`, `steps = 100`. Spring pendulum: same parameters as the example. Double pendulum: 5 s with 0.05 s macro step. | Logs analytic vs. simulated position/velocity, energy balance, and reports the energy drift for both fixed and adaptive solvers (adaptive must be smaller). |
 | `test_physics_model` | Placeholder until the rigid-body physics implementation lands. | None yet. | Emits a `[TODO]` message to remind developers the suite is waiting on the physics module. |
 | `test_neural_state_space` | Placeholder for neural state-space identification tests. | None yet. | Outputs `[TODO]` marker. |
 | `test_battery_model` | Placeholder for future battery plant verification. | None yet. | Outputs `[TODO]` marker. |

@@ -98,7 +98,7 @@ static void spring_pendulum_energy(const spring_pendulum_state_t* state,
     }
 }
 
-int main(void) {
+int main(int argc, char** argv) {
     spring_pendulum_state_t state = {
         .x = 0.2,
         .y = 0.8,
@@ -131,6 +131,17 @@ int main(void) {
     double gravity_pe = 0.0;
     double total_e = 0.0;
 
+    FILE* csv = NULL;
+    if (argc > 1) {
+        csv = fopen(argv[1], "w");
+        if (!csv) {
+            perror("fopen");
+            return 1;
+        }
+        fprintf(csv,
+                "time_s,x_m,y_m,vx_m_per_s,vy_m_per_s,kinetic_j,spring_potential_j,gravity_potential_j,total_energy_j\n");
+    }
+
     for (int i = 0; i < steps; ++i) {
         dm_integrate_rk4(&state, &params, dt, sizeof(state),
                          spring_pendulum_derivative, NULL,
@@ -143,6 +154,18 @@ int main(void) {
                    time, state.x, state.y, state.vx, state.vy,
                    kinetic, spring_pe, gravity_pe, total_e);
         }
+        if (csv) {
+            spring_pendulum_energy(&state, &params,
+                                   &kinetic, &spring_pe, &gravity_pe, &total_e);
+            fprintf(csv,
+                    "%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
+                    time, state.x, state.y, state.vx, state.vy,
+                    kinetic, spring_pe, gravity_pe, total_e);
+        }
+    }
+
+    if (csv) {
+        fclose(csv);
     }
 
     return 0;

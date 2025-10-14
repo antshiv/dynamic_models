@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integration Intuition: Euler vs. RK4</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+        }
+        p {
+            max-width: 800px;
+            color: #555;
+        }
+        .infographic-container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+        svg {
+            width: 100%;
+            height: auto;
+            font-family: monospace;
+        }
+        .true-curve {
+            fill: none;
+            stroke: #3498db;
+            stroke-width: 4;
+            stroke-linecap: round;
+        }
+        .euler-step {
+            stroke: #e74c3c;
+            stroke-width: 2.5;
+        }
+        .euler-point {
+            fill: #c0392b;
+        }
+        .euler-area {
+            fill: #e74c3c;
+            opacity: 0.1;
+        }
+        .rk4-step {
+            stroke: #2ecc71;
+            stroke-width: 2.5;
+        }
+        .rk4-point {
+            fill: #27ae60;
+        }
+        .rk4-area {
+            fill: #2ecc71;
+            opacity: 0.15;
+        }
+        .rk4-predictor-path {
+            fill: none;
+            stroke: #7f8c8d;
+            stroke-width: 1.5;
+            stroke-dasharray: 3 3;
+        }
+        .rk4-intermediate-point {
+            fill: #7f8c8d;
+            stroke: white;
+            stroke-width: 1;
+        }
+        .helper-line {
+            stroke: #bdc3c7;
+            stroke-width: 1;
+            stroke-dasharray: 4 4;
+        }
+        .tangent-line {
+            stroke-width: 1.5;
+            opacity: 0.9;
+        }
+        .k1 { stroke: #f39c12; }
+        .k2 { stroke: #d35400; }
+        .k3 { stroke: #d35400; }
+        .k4 { stroke: #c0392b; }
+
+        .label {
+            font-size: 16px;
+            fill: #34495e;
+        }
+        .title-label {
+            font-size: 24px;
+            font-weight: bold;
+            fill: #2c3e50;
+        }
+        .formula-label, .legend-label {
+            font-size: 14px;
+        }
+        .axis-label {
+            font-size: 14px;
+            fill: #7f8c8d;
+        }
+        .point-label {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .footer-note {
+            font-size: 14px;
+            fill: #7f8c8d;
+            font-style: italic;
+        }
+        .area-label {
+            font-size: 12px;
+            fill: #555;
+            font-style: italic;
+        }
+        .created-by {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Integration Intuition: Euler vs. RK4</h1>
+        <p>A visual comparison of first-order and fourth-order numerical integration methods for solving ordinary differential equations of the form <code>ẋ = f(x, t)</code>.</p>
+    </header>
+
+    <div class="infographic-container">
+        <svg viewBox="0 0 1200 650" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#7f8c8d" />
+                </marker>
+            </defs>
+
+            <!-- Axes -->
+            <line x1="50" y1="580" x2="1150" y2="580" stroke="#333" stroke-width="2" marker-end="url(#arrow)"></line>
+            <line x1="50" y1="580" x2="50" y2="50" stroke="#333" stroke-width="2" marker-end="url(#arrow)"></line>
+            <text x="1130" y="605" class="axis-label">time (t)</text>
+            <text x="-45" y="60" class="axis-label" transform="rotate(-90, 20, 60)">state (x) [e.g., position]</text>
+
+            <!-- Area under true curve -->
+            <path fill="#3498db" opacity="0.05" d="M 150 515 C 300 460, 500 160, 800 130 S 1100 210, 1100 210 L 550 285 L 550 580 L 150 580 Z"></path>
+
+            <!-- Euler Area -->
+            <path class="euler-area" d="M 150 515 L 550 375 L 550 580 L 150 580 Z"></path>
+            <text class="area-label" x="350" y="500">Area Approx. (Euler)</text>
+
+            <!-- RK4 Area -->
+            <path class="rk4-area" d="M 150 515 L 550 295 L 550 580 L 150 580 Z"></path>
+            <text class="area-label" x="250" y="450">Improved Area (RK4)</text>
+
+            <!-- True Solution Curve -->
+            <path id="true-curve" class="true-curve" d="M 150 515 C 300 460, 500 160, 800 130 S 1100 210, 1100 210"></path>
+            
+            <!-- Shared Start Point -->
+            <circle cx="150" cy="515" r="5" fill="#34495e"></circle>
+            <text x="160" y="545" class="point-label">{ x_k, t_k }</text>
+            <line x1="150" y1="515" x2="150" y2="580" class="helper-line"></line>
+            <text x="135" y="600" class="axis-label">t_k</text>
+            <line x1="50" y1="515" x2="150" y2="515" class="helper-line"></line>
+            <text x="15" y="520" class="axis-label">x_k</text>
+
+            <!-- Time Step dt -->
+            <line x1="550" y1="515" x2="550" y2="580" class="helper-line"></line>
+            <text x="530" y="600" class="axis-label">t_k + dt</text>
+            <line x1="150" y1="560" x2="550" y2="560" stroke="#7f8c8d" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"></line>
+            <text x="340" y="550" class="axis-label">dt</text>
+
+            <!-- Euler Integration -->
+            <g id="euler">
+                <text x="150" y="80" class="title-label">Forward Euler (1st Order)</text>
+                <line class="tangent-line euler-step" x1="150" y1="515" x2="550" y2="375"></line>
+                <circle class="euler-point" cx="550" cy="375" r="6"></circle>
+                <text x="565" y="370" class="point-label" fill="#c0392b">Euler Approx.</text>
+                <line class="helper-line" x1="550" y1="375" x2="550" y2="285"></line>
+                <text x="400" y="330" class="label" fill="#e74c3c">Local Error: O(dt²)</text>
+                <text x="400" y="350" class="label" fill="#e74c3c">Global Error: O(dt)</text>
+                <text x="150" y="120" class="formula-label">x_{k+1} = x_k + dt * f(x_k, t_k)</text>
+            </g>
+
+            <!-- RK4 Integration -->
+            <g id="rk4">
+                <text x="700" y="380" class="title-label">Runge-Kutta (4th Order)</text>
+                
+                <path class="rk4-predictor-path" d="M 150 515 L 350 445 L 350 438 L 550 298"></path>
+                <circle class="rk4-intermediate-point" cx="350" cy="445" r="4"></circle>
+                <text x="300" y="435" class="point-label" fill="#7f8c8d">½ step</text>
+                <circle class="rk4-intermediate-point" cx="350" cy="438" r="4"></circle>
+
+                <line class="tangent-line k1" x1="150" y1="515" x2="350" y2="445"></line>
+                <line class="tangent-line k2" x1="350" y1="445" x2="550" y2="335"></line>
+                <line class="tangent-line k3" x1="350" y1="438" x2="550" y2="320"></line>
+                <line class="tangent-line k4" x1="550" y1="298" x2="750" y2="160"></line>
+
+                <line class="rk4-step" x1="150" y1="515" x2="550" y2="295"></line>
+                <circle class="rk4-point" cx="550" cy="295" r="6"></circle>
+                <text x="565" y="305" class="point-label" fill="#27ae60">RK4 Approx.</text>
+                <line class="helper-line" x1="550" y1="295" x2="550" y2="285" stroke-width="2"></line>
+                <text x="565" y="265" class="label" fill="#2ecc71">Local: O(dt⁵)</text>
+                <text x="565" y="285" class="label" fill="#2ecc71">Global: O(dt⁴)</text>
+                
+                <text x="700" y="420" class="formula-label">k1 = f(x_k, ...)</text>
+                <text x="700" y="440" class="formula-label">k2 = f(x_k + 0.5*dt*k1, ...)</text>
+                <text x="700" y="460" class="formula-label">k3 = f(x_k + 0.5*dt*k2, ...)</text>
+                <text x="700" y="480" class="formula-label">k4 = f(x_k + dt*k3, ...)</text>
+                <text x="700" y="500" class="formula-label">x_{k+1} = x_k + dt/6 * (k1+2k2+2k3+k4)</text>
+            </g>
+
+            <!-- Legend -->
+            <g id="legend" transform="translate(900, 20)">
+                <rect width="250" height="140" fill="#fff" stroke="#ccc" rx="5"></rect>
+                <text x="125" y="20" text-anchor="middle" font-weight="bold">Legend</text>
+                <rect x="15" y="35" width="20" height="4" class="true-curve" stroke-width="4"></rect>
+                <text x="45" y="40" class="legend-label">True Solution</text>
+                <line x1="15" y1="55" x2="35" y2="55" class="euler-step"></line>
+                <text x="45" y="60" class="legend-label">Euler Approximation</text>
+                <line x1="15" y1="75" x2="35" y2="75" class="rk4-step"></line>
+                <text x="45" y="80" class="legend-label">RK4 Approximation</text>
+                <line x1="15" y1="95" x2="35" y2="95" class="tangent-line k1"></line>
+                <text x="45" y="100" class="legend-label">k1, k2, k3, k4 Slopes</text>
+                <line x1="15" y1="115" x2="35" y2="115" class="rk4-predictor-path"></line>
+                <text x="45" y="120" class="legend-label">RK4 Predictor Path</text>
+            </g>
+
+            <!-- Footer Note -->
+            <text x="600" y="635" class="footer-note" text-anchor="middle">Note: All kᵢ evaluate the same first derivative f(x,t) at different predicted states—no higher derivatives are needed.</text>
+        </svg>
+    </div>
+    <p class="created-by">Authored by Anthony Shivakumar (with A.I help)</p>
+</body>
+</html>

@@ -76,3 +76,7 @@ method inside the dynamic models library.
    stiff battery or structural models can run without sub-millisecond steps.
 3. Expose method selection through the example harnesses, allowing quick
    benchmarking between explicit and implicit approaches.
+
+_Planned additions:_ `dm_integrate_rk45_adaptive` (Dormand–Prince) with
+automatic step-size control and an implicit-solver scaffold (backward Euler /
+trapezoidal) once the linear algebra pieces are ready.

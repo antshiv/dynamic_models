@@ -95,6 +95,9 @@ void dm_integrate_rk4(void* state,
     dm_state_combined_update(state_vec, k1, k2, k3, k4, dt, count);
 }
 
+/* TODO: add dm_integrate_rk45_adaptive (Dormand–Prince) and implicit
+ * integrators once error-control and linear-solver scaffolds are in place. */
+
 static double dm_clamp(double value, double min_value, double max_value) {
     if (value < min_value) {
         return min_value;

@@ -42,7 +42,11 @@ set(SRC_FILES
     ${SRC_DIR}/battery/battery_management.c
     ${SRC_DIR}/utilities/numerical_solver.c
     ${SRC_DIR}/linear/point_mass_linear.c
+    ${SRC_DIR}/linear/mass_spring_linear.c
     ${SRC_DIR}/linear/spring_pendulum_linear.c
+    ${SRC_DIR}/linear/pendulum_linear.c
+    ${SRC_DIR}/linear/inverted_pendulum_linear.c
+    ${SRC_DIR}/linear/double_pendulum_linear.c
 )
 
 add_library(dynamic_models STATIC ${SRC_FILES})
@@ -71,9 +75,16 @@ target_link_libraries(double_pendulum_example PRIVATE dynamic_models)
 add_executable(inverted_pendulum_example ${EXAMPLES_DIR}/inverted_pendulum/main.c)
 target_link_libraries(inverted_pendulum_example PRIVATE dynamic_models)
 
+add_executable(drone_hover_example ${EXAMPLES_DIR}/drone/example_physics_model.c)
+target_link_libraries(drone_hover_example PRIVATE dynamic_models)
+
 # Add tests
 enable_testing()
 add_subdirectory(${TEST_DIR})
+
+if(EXISTS ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
+    file(REMOVE ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
+endif()
 
 # Add examples
 #add_executable(dynamic_models_example ${EXAMPLES_DIR}/main.c)

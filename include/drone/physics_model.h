@@ -4,7 +4,15 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
 #include <stdalign.h>
+#define DM_ALIGNAS(x) alignas(x)
+#elif defined(__GNUC__)
+#define DM_ALIGNAS(x) __attribute__((aligned(x)))
+#else
+#define DM_ALIGNAS(x)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,7 +55,7 @@ typedef struct dm_rotor_config_s {
 /**
  * Runtime rotor state cache aligned for SIMD friendliness.
  */
-typedef struct alignas(16) dm_rotor_state_s {
+typedef struct DM_ALIGNAS(16) dm_rotor_state_s {
     double omega;     /* rad/s */
     double thrust;    /* N */
     double torque;    /* N·m about rotor axis */

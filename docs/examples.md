@@ -59,21 +59,37 @@ the full time series is recorded for plotting or CLI-driven reports.
     damping.
 
 ## Quadrotor Hover (Drone)
-- **Scenario:** 1.6 kg quadrotor with 0.23 m arm length, thrust axis aligned
-  with body `-Z`, and a symmetric inertia tensor (`diag(0.03, 0.03, 0.05)`).
-  Rotor thrust/torque gains are tuned so `ω ≈ 511.5 rad/s` balances weight in
-  hover.
-- **Integrator:** `dm_integrate_rk4`.
-- **Quantities tracked:** altitude (`-z` in NED), vertical velocity, and Euler
-  roll/pitch angles reconstructed from the quaternion.
-- **Validation:**  
-  - Example prints the state every 0.1 s. The first second demonstrates steady
-    hover. Between 1.0–1.1 s, front rotors receive a 1% boost and rear rotors a
-    1% reduction, producing a gentle pitch response while thrust symmetry keeps
-    roll ≈ 0°.  
-  - Because no feedback controller or drag is modeled yet, the vehicle slowly
-    descends after the pulse—highlighting the need for control loops even in
-    otherwise balanced thrust configurations.
+- **Scenario (mental model):** Think of the quad as a flying stool: the seat is
+  the rigid body (mass 1.6 kg, inertia `diag(0.03, 0.03, 0.05)`), and the four
+  legs are rotors mounted 0.23 m away from the center. Each rotor blows air
+  downward; the faster it spins, the stronger the push (`F = k_t·ω²`). If all
+  pushes add up to weight (`m·g`), the stool “floats” in place.
+- **Building blocks in play:**  
+  1. Translational dynamics (`F = m·a`) from the rigid-body model.  
+  2. Rotational dynamics (`τ = I·α + ω×(I·ω)`) that turn unequal thrusts into
+     roll/pitch/yaw motion.  
+  3. Rotor thrust/torque maps (`k_t`, `k_q`) and geometry (positions, spin
+     direction). No springs or pendulums are involved—just pure rigid-body
+     mechanics.
+- **Inputs:** rotor angular speeds (`ω₁..ω₄`). The example first sets all four
+  to the exact hover speed (~511.5 rad/s) so thrust equals weight, then adds a
+  gentle ±1 % tweak to the front/back pair for 0.1 s to illustrate how a small
+  imbalance pitches the drone.
+- **Outputs printed:** altitude (`-z` in the NED frame), vertical velocity, and
+  roll/pitch Euler angles reconstructed from the quaternion state.
+- **Integrator:** `dm_integrate_rk4` with `dt = 0.002 s`; state is logged every
+  0.1 s to keep the console readable.
+- **Takeaway:** The first second remains level—hover achieved. Once the fore/aft
+  thrust pulse arrives, the drone pitches forward because the net thrust no
+  longer lines up with gravity; a later left/right pulse does the same for roll.
+  Hover still includes rotational dynamics: equal thrust means torques cancel,
+  so `α = 0` and the quaternion stays fixed; any imbalance produces a body
+  torque, angular velocity, and an evolving quaternion via `q̇ = ½ Ω(q) ω`. With
+  no controller to cancel those tilts, the drift persists—highlighting why the
+  control library must close the loop on top of these dynamics.
+- **Deep dive:** See `docs/drone_hover_walkthrough.md` for a detailed,
+  code-referenced explanation of how the example and unit tests trace each
+  Newtonian step.
 
 ## Next Steps
 - Add CSV output support to the quadrotor example once controller hooks are

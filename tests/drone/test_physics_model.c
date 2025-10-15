@@ -131,10 +131,35 @@ static void test_reaction_torque_about_yaw(void) {
     assert(nearly_equal(state_dot.angular_rate[2], expected_yaw_alpha, 1e-6));
 }
 
+static void test_offset_rotor_generates_pitch_torque(void) {
+    dm_vehicle_config_t cfg = make_base_config();
+    cfg.rotors[0].position_body[0] = 0.12;
+    cfg.rotors[0].position_body[1] = 0.0;
+    cfg.rotors[0].position_body[2] = 0.0;
+    cfg.rotors[0].torque_coeff = 0.0;
+
+    dm_vehicle_model_t model = make_model(&cfg);
+
+    const double thrust = 8.0;
+    double rotor_omega[DM_MAX_ROTORS] = {0.0};
+    rotor_omega[0] = sqrt(thrust / cfg.rotors[0].thrust_coeff);
+
+    dm_state_t state_dot;
+    dm_vehicle_evaluate(&model, rotor_omega, &state_dot);
+
+    const double expected_pitch_alpha = (cfg.rotors[0].position_body[0] * thrust) /
+                                        cfg.inertia[1][1];
+
+    assert(nearly_equal(state_dot.angular_rate[1], expected_pitch_alpha, 1e-9));
+    assert(nearly_equal(state_dot.angular_rate[0], 0.0, 1e-12));
+    assert(nearly_equal(state_dot.angular_rate[2], 0.0, 1e-12));
+}
+
 int main(void) {
     test_free_fall_gravity_only();
     test_hover_balance();
     test_offset_rotor_generates_roll_torque();
+    test_offset_rotor_generates_pitch_torque();
     test_reaction_torque_about_yaw();
     return 0;
 }

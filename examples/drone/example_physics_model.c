@@ -5,6 +5,38 @@
 #include "drone/physics_model.h"
 #include "utilities/numerical_solvers.h"
 
+/*
+ * Hover walkthrough (Feynman style):
+ *
+ * 1. Picture a drone as a mass that can spin four fans. Newton still rules:
+ *    the total upward force from the fans must equal the downward weight (m·g)
+ *    to hover. If the fans push harder, the drone accelerates upward; if they
+ *    push softer, it falls.
+ *
+ * 2. Each fan sits on an arm. Pushing harder at one corner tilts the drone
+ *    because the force no longer passes through the center. That tilt changes
+ *    the direction of the combined thrust, creating roll/pitch motion.
+ *
+ * 3. The code below sets up those pieces:
+ *      - mass and inertia (how hard it is to translate/rotate),
+ *      - rotor locations, directions, and simple thrust laws (F = k_t * ω²),
+ *      - the rigid-body equations from `dm_vehicle_evaluate` (F = m·a,
+ *        τ = I·α + ω×(I·ω)).
+ *
+ * 4. We then integrate the state forward in time with RK4. First we feed the
+ *    exact hover speed (thrust = weight) so every rotor produces the same force.
+ *    Because the geometry is symmetric, the torques cancel and the angular
+ *    acceleration is zero—so the orientation quaternion simply holds steady.
+ *    Next we nudge the front rotors +1 % and rear rotors -1 % for 0.1 s. The
+ *    imbalance creates a body torque, the angular rate grows, and the quaternion
+ *    derivative (`q_dot = ½ Ω(q) · ω`) updates the orientation over time. A few
+ *    moments later we do a similar left/right tweak to provoke roll. Without a
+ *    controller to counteract those changes, the drone keeps drifting.
+ *
+ * 5. The program prints altitude, vertical velocity, and roll/pitch angles so
+ *    you can watch the story unfold.
+ */
+
 typedef struct {
     const dm_vehicle_config_t* config;
     double rotor_omega[DM_MAX_ROTORS];
@@ -147,6 +179,13 @@ int main(void) {
             inputs.rotor_omega[1] = hover_omega * reduce; /* front-left */
             inputs.rotor_omega[2] = hover_omega * reduce; /* rear-left */
             inputs.rotor_omega[3] = hover_omega * boost;  /* rear-right */
+        } else if (time > 1.4 && time <= 1.5) {
+            const double boost = 1.01;
+            const double reduce = 0.99;
+            inputs.rotor_omega[0] = hover_omega * boost;   /* front-right */
+            inputs.rotor_omega[3] = hover_omega * boost;   /* rear-right */
+            inputs.rotor_omega[1] = hover_omega * reduce;  /* front-left */
+            inputs.rotor_omega[2] = hover_omega * reduce;  /* rear-left */
         } else {
             for (size_t i = 0; i < config.rotor_count; ++i) {
                 inputs.rotor_omega[i] = hover_omega;

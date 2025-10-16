@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "attitude/quaternion.h"
+
 static void dm_zero_state(dm_state_t* out) {
     memset(out, 0, sizeof(*out));
 }
@@ -40,48 +42,21 @@ static void dm_mat3_vec3_mul(const double mat[3][3],
     }
 }
 
-static double dm_quaternion_normalize(double q[4]) {
+static void dm_quaternion_to_dcm(const double quat_in[4], double dcm[3][3]) {
+    double q[4] = {
+        quat_in[0], quat_in[1], quat_in[2], quat_in[3]
+    };
+
     const double norm_sq = q[0] * q[0] + q[1] * q[1] +
                            q[2] * q[2] + q[3] * q[3];
     if (norm_sq <= 0.0) {
         q[0] = 1.0;
         q[1] = q[2] = q[3] = 0.0;
-        return 1.0;
+    } else {
+        quaternion_normalize(q);
     }
-    const double inv_norm = 1.0 / sqrt(norm_sq);
-    q[0] *= inv_norm;
-    q[1] *= inv_norm;
-    q[2] *= inv_norm;
-    q[3] *= inv_norm;
-    return inv_norm;
-}
 
-static void dm_quaternion_to_dcm(const double quat_in[4], double dcm[3][3]) {
-    double q[4] = {
-        quat_in[0], quat_in[1], quat_in[2], quat_in[3]
-    };
-    dm_quaternion_normalize(q);
-
-    const double w = q[0];
-    const double x = q[1];
-    const double y = q[2];
-    const double z = q[3];
-
-    const double xx = x * x;
-    const double yy = y * y;
-    const double zz = z * z;
-
-    dcm[0][0] = 1.0 - 2.0 * (yy + zz);
-    dcm[0][1] = 2.0 * (x * y - z * w);
-    dcm[0][2] = 2.0 * (x * z + y * w);
-
-    dcm[1][0] = 2.0 * (x * y + z * w);
-    dcm[1][1] = 1.0 - 2.0 * (xx + zz);
-    dcm[1][2] = 2.0 * (y * z - x * w);
-
-    dcm[2][0] = 2.0 * (x * z - y * w);
-    dcm[2][1] = 2.0 * (y * z + x * w);
-    dcm[2][2] = 1.0 - 2.0 * (xx + yy);
+    quaternion_to_dcm(q, dcm);
 }
 
 static void dm_quaternion_derivative(const double quat[4],

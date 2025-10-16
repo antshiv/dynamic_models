@@ -1,17 +1,73 @@
 ﻿# Dynamic Models Library
 
-This repository hosts physics-based and data-driven modules for aerial vehicle dynamics:
-- Multi-rotor rigid-body modeling (quad, hex, heli)
-- Motor and propulsion dynamics
-- Battery and power-train modelling (planned)
-- System-identification and neural state-space utilities (planned)
+The Dynamic Models library provides the physics backbone that downstream
+controllers, planners, and learning systems plug into. Today it already
+includes:
 
-## Current Layout
-- `include/` – Public headers for drone, motor, battery, utilities.
-- `src/` – Implementation for each subsystem (currently stubs to be filled).
-- `data/` – Example datasets for identification and validation.
-- `tests/` – Unit and integration tests.
-- `examples/` – Sample simulations that exercise the models.
+- **Rigid-body quadrotor plant** (`dm_vehicle_evaluate`) with thrust/torque
+  aggregation, gravity, and quaternion kinematics. See the hover walkthrough in
+  `docs/drone_hover_walkthrough.md`.
+- **Numerical integration utilities** (Euler, RK4, adaptive RK45) with regression
+  tests that compare against analytic solutions and energy balances.
+- **Closed-form linearizations** for canonical systems (point mass, mass–spring,
+  simple/spring pendula, inverted pendulum, double pendulum) expressed as A/B/C/D
+  matrices for control design.
+- **Examples** that exercise each model and print diagnostics so you can verify
+  behaviour (hover, pendulum energy, etc.).
+- **Documentation set** covering free-body diagrams, integration intuition, and
+  step-by-step guides that tie the math back to the code.
+
+Planned modules—now scaffolded with headers, source stubs, and placeholder
+tests—include motor dynamics, battery modelling, and neural state-space tools.
+
+## Repository Layout
+
+| Path | Description |
+| --- | --- |
+| `include/`, `src/` | Library headers/implementations grouped by subsystem (`drone`, `motor`, `battery`, `linear`, `utilities`). |
+| `examples/` | Standalone programs that integrate the models (point mass, pendula, quad hover, etc.). |
+| `tests/` | Unit/integration tests built with CTest; every executable is catalogued in `docs/tests_overview.md`. |
+| `docs/` | Narrative guides, derivations, and walkthroughs (see highlights below). |
+| `data/` | Placeholder directories for future identification datasets. |
+| `external/attitudeMathLibrary/` | Quaternion/Euler math used by the drone plant and tests. |
+
+See `docs/examples.md` for a per-example validation summary and
+`docs/dynamics_analysis_guide.md` for modelling conventions.
+
+## Subsystem Snapshot
+
+| Subsystem | Status | Key Files | Tests |
+| --- | --- | --- | --- |
+| **Integrators** | ✅ Complete | `include/utilities/numerical_solvers.h`, `src/utilities/numerical_solver.c` | `tests/utilities/test_numerical_solvers.c` |
+| **Linear models** | ✅ Complete | `include/linear_models/*.h`, `src/linear/*.c` | `tests/linear/*.c` |
+| **Drone rigid-body** | ✅ Complete | `include/drone/physics_model.h`, `src/drone/physics_model.c` | `tests/drone/test_physics_model.c`, walkthrough in `docs/drone_hover_walkthrough.md` |
+| **Motor dynamics** | 🚧 Planned | `include/motor/motor_dynamics.h`, `src/motor/motor_dynamics.c` | Placeholder `tests/motor/test_motor_dynamics.c` |
+| **Battery plant/BMS** | 🚧 Planned | `include/battery/*.h`, `src/battery/*.c` | Placeholder tests in `tests/battery/` |
+| **Neural/ID utilities** | 🚧 Planned | `include/drone/neural_state_space.h`, `src/drone/neural_state_space.c` | Placeholder `tests/drone/test_neural_state_space.c` |
+
+Confidence in all “✅ Complete” rows is backed by automated tests plus console
+examples you can run yourself.
+
+## Build & Test
+
+```bash
+cmake -S . -B build
+cmake --build build
+cd build
+ctest --output-on-failure
+```
+
+Useful single binaries:
+
+- `./double_pendulum_example`, `./spring_pendulum_example`, `./point_mass_example`
+- `./drone_hover_example` – shows steady hover, then pitch/roll disturbances (see
+  `docs/drone_hover_walkthrough.md` for a narrated tour).
+- `./tests/test_numerical_solvers`, `./tests/test_physics_model`, etc.
+
+All tests pass except the intentional `[TODO]` placeholders for subsystems that
+have not been implemented yet; those executables simply print reminders.
+
+---
 
 ## Hover Computation Graph
 The first concrete deliverable is a hover-capable plant that feeds downstream control libraries.

@@ -49,4 +49,5 @@ jobs:
         run: |
           cmake --build build/sanitize --parallel
           ./build/sanitize/tests/test_physics_model
+          ./build/sanitize/tests/test_motor_dynamics
           ./build/sanitize/tests/test_numerical_solvers

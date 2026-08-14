@@ -1,3 +1,6 @@
 [submodule "external/attitudeMathLibrary"]
 	path = external/attitudeMathLibrary
 	url = https://github.com/antshiv/attitudeMathLibrary.git
+[submodule "external/motorDynamics"]
+	path = external/motorDynamics
+	url = https://github.com/antshiv/motorDynamics.git

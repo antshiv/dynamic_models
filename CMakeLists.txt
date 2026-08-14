@@ -42,9 +42,22 @@ else()
     set(HAVE_ATTITUDE_LIB OFF)
 endif()
 
+# Electric-machine equations remain owned and tested by motorDynamics.
+set(MOTOR_DYNAMICS_DIR ${EXTERNAL_DIR}/motorDynamics)
+if(EXISTS ${MOTOR_DYNAMICS_DIR}/CMakeLists.txt)
+    if(NOT TARGET motor_dynamics)
+        add_subdirectory(${MOTOR_DYNAMICS_DIR}
+                         ${CMAKE_CURRENT_BINARY_DIR}/motorDynamics)
+    endif()
+    set(HAVE_MOTOR_DYNAMICS ON)
+else()
+    set(HAVE_MOTOR_DYNAMICS OFF)
+endif()
+
 # Add source files for subsystems
 set(SRC_FILES
     ${SRC_DIR}/drone/physics_model.c
+    ${SRC_DIR}/motor/motor_dynamics.c
     ${SRC_DIR}/utilities/numerical_solver.c
     ${SRC_DIR}/linear/point_mass_linear.c
     ${SRC_DIR}/linear/mass_spring_linear.c
@@ -59,6 +72,12 @@ set(SRC_FILES
 
 add_library(dynamic_models STATIC ${SRC_FILES})
 target_include_directories(dynamic_models PUBLIC ${INCLUDE_DIR})
+
+if(NOT HAVE_MOTOR_DYNAMICS)
+    message(FATAL_ERROR
+        "motorDynamics submodule is required; run git submodule update --init --recursive")
+endif()
+target_link_libraries(dynamic_models PUBLIC motorDynamics::motor_dynamics)
 
 if(HAVE_ATTITUDE_LIB)
     target_link_libraries(dynamic_models PUBLIC attitude)

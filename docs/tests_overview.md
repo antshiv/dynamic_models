@@ -14,7 +14,7 @@ printed numbers.
 | `test_neural_state_space` | Placeholder for neural state-space identification tests. | None yet. | Outputs `[TODO]` marker. |
 | `test_battery_model` | Placeholder for future battery plant verification. | None yet. | Outputs `[TODO]` marker. |
 | `test_battery_management` | Placeholder for BMS logic tests. | None yet. | Outputs `[TODO]` marker. |
-| `test_motor_dynamics` | Placeholder for motor/ESC dynamic response checks. | None yet. | Outputs `[TODO]` marker. |
+| `test_motor_dynamics` | Brushed DC reference plus six-step BLDC submodule integration and motor-to-vehicle composition. | Machine parameters, DC bus, duty/sector command, load torque. | DC equilibrium, BLDC vehicle response, and fail-closed invalid commands. |
 | `test_point_mass_linear` | Verifies the generated `A`, `B`, `C`, `D` matrices for the point-mass state-space model and exercises error handling. | Mass parameter (`m = 1.2 kg`). | Prints the matrices and asserts they match the analytic derivation; confirms error codes for invalid inputs. |
 | `test_mass_spring_linear` | Checks the classic 1D mass–spring–damper linearization and confirms damping/force gains. | `m = 2.0 kg`, `k = 40 N/m`, `c = 1.2 N·s/m`. | Logs the `A/B` entries (`-k/m`, `-c/m`, `1/m`) and exercises invalid-parameter error handling. |
 | `test_spring_pendulum_linear` | Checks the spring pendulum linearization about the hanging equilibrium and validates the reported equilibrium state. | `m = 0.5 kg`, `k = 15 N/m`, `c = 0.3 N·s/m`, `L₀ = 0.5 m`, `g = 9.81 m/s²`. | Compares `A`, `B`, `C`, `D` entries against analytic formulas and exercises error handling paths. |

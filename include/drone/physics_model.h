@@ -86,6 +86,26 @@ typedef struct dm_vehicle_model_s {
     double torque_body[3];
 } dm_vehicle_model_t;
 
+typedef enum dm_result_e {
+    DM_OK = 0,
+    DM_INVALID_ARGUMENT = 1,
+    DM_INVALID_CONFIG = 2,
+    DM_INVALID_STATE = 3,
+    DM_NUMERICAL_FAILURE = 4
+} dm_result_t;
+
+/** Validate geometry, mass properties, and the supplied inertia inverse. */
+dm_result_t dm_vehicle_config_validate(const dm_vehicle_config_t* config);
+
+/**
+ * Checked derivative evaluation. On failure, state_dot is cleared when it is
+ * available, so callers cannot accidentally consume a stale derivative.
+ */
+dm_result_t dm_vehicle_evaluate_checked(
+    const dm_vehicle_model_t* model,
+    const double rotor_omega[DM_MAX_ROTORS],
+    dm_state_t* state_dot);
+
 /**
  * Compute state derivatives given rotor speeds (ω) and the current model.
  * The caller provides state_dot as output buffer.
@@ -93,6 +113,15 @@ typedef struct dm_vehicle_model_s {
 void dm_vehicle_evaluate(const dm_vehicle_model_t* model,
                          const double rotor_omega[DM_MAX_ROTORS],
                          dm_state_t* state_dot);
+
+/**
+ * Advance the vehicle by one fixed RK4 step. The model is updated only after
+ * every stage succeeds and the resulting quaternion can be normalized.
+ */
+dm_result_t dm_vehicle_step_rk4_checked(
+    dm_vehicle_model_t* model,
+    const double rotor_omega[DM_MAX_ROTORS],
+    double dt);
 
 #ifdef __cplusplus
 }

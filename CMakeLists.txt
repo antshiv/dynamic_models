@@ -35,11 +35,6 @@ endif()
 # Add source files for subsystems
 set(SRC_FILES
     ${SRC_DIR}/drone/physics_model.c
-    ${SRC_DIR}/drone/neural_state_space.c
-    ${SRC_DIR}/drone/system_identification.c
-    ${SRC_DIR}/motor/motor_dynamics.c
-    ${SRC_DIR}/battery/battery_model.c
-    ${SRC_DIR}/battery/battery_management.c
     ${SRC_DIR}/utilities/numerical_solver.c
     ${SRC_DIR}/linear/point_mass_linear.c
     ${SRC_DIR}/linear/mass_spring_linear.c

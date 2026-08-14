@@ -5,10 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-#include <stdalign.h>
-#define DM_ALIGNAS(x) alignas(x)
-#elif defined(__GNUC__)
+#if defined(__GNUC__)
 #define DM_ALIGNAS(x) __attribute__((aligned(x)))
 #else
 #define DM_ALIGNAS(x)

@@ -1,10 +1,6 @@
 # Enable testing for the project
 set(TEST_SOURCES
     ${TEST_DIR}/drone/test_physics_model.c
-    ${TEST_DIR}/drone/test_neural_state_space.c
-    ${TEST_DIR}/battery/test_battery_model.c
-    ${TEST_DIR}/battery/test_battery_management.c
-    ${TEST_DIR}/motor/test_motor_dynamics.c
     ${TEST_DIR}/utilities/test_numerical_solvers.c
     ${TEST_DIR}/linear/test_point_mass_linear.c
     ${TEST_DIR}/linear/test_mass_spring_linear.c

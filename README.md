@@ -4,8 +4,9 @@ The Dynamic Models library provides the physics backbone that downstream
 controllers, planners, and learning systems plug into. Today it already
 includes:
 
-- **Rigid-body quadrotor plant** (`dm_vehicle_evaluate`) with thrust/torque
-  aggregation, gravity, and quaternion kinematics. See the hover walkthrough in
+- **Rigid-body multirotor plant** with checked derivative evaluation, fixed-step
+  RK4 propagation, thrust/torque aggregation, gravity, quaternion kinematics,
+  and fail-closed numerical boundaries. See the hover walkthrough in
   `docs/drone_hover_walkthrough.md`.
 - **Numerical integration utilities** (Euler, RK4, adaptive RK45) with regression
   tests that compare against analytic solutions and energy balances.
@@ -17,8 +18,9 @@ includes:
 - **Documentation set** covering free-body diagrams, integration intuition, and
   step-by-step guides that tie the math back to the code.
 
-Planned modules—now scaffolded with headers, source stubs, and placeholder
-tests—include motor dynamics, battery modelling, and neural state-space tools.
+Motor dynamics, battery modelling, neural state-space tools, and system
+identification remain placeholders. They are excluded from the accepted
+library and test surface until they have implementations and numerical evidence.
 
 ## Repository Layout
 
@@ -40,10 +42,10 @@ See `docs/examples.md` for a per-example validation summary and
 | --- | --- | --- | --- |
 | **Integrators** | ✅ Complete | `include/utilities/numerical_solvers.h`, `src/utilities/numerical_solver.c` | `tests/utilities/test_numerical_solvers.c` |
 | **Linear models** | ✅ Complete | `include/linear_models/*.h`, `src/linear/*.c` | `tests/linear/*.c` |
-| **Drone rigid-body** | ✅ Complete | `include/drone/physics_model.h`, `src/drone/physics_model.c` | `tests/drone/test_physics_model.c`, walkthrough in `docs/drone_hover_walkthrough.md` |
-| **Motor dynamics** | 🚧 Planned | `include/motor/motor_dynamics.h`, `src/motor/motor_dynamics.c` | Placeholder `tests/motor/test_motor_dynamics.c` |
-| **Battery plant/BMS** | 🚧 Planned | `include/battery/*.h`, `src/battery/*.c` | Placeholder tests in `tests/battery/` |
-| **Neural/ID utilities** | 🚧 Planned | `include/drone/neural_state_space.h`, `src/drone/neural_state_space.c` | Placeholder `tests/drone/test_neural_state_space.c` |
+| **Drone rigid-body** | ✅ Validated derivative and propagation | `include/drone/physics_model.h`, `src/drone/physics_model.c` | `tests/drone/test_physics_model.c`, walkthrough in `docs/drone_hover_walkthrough.md` |
+| **Motor dynamics** | 🚧 Not implemented | `include/motor/motor_dynamics.h`, `src/motor/motor_dynamics.c` | Excluded from accepted tests |
+| **Battery plant/BMS** | 🚧 Not implemented | `include/battery/*.h`, `src/battery/*.c` | Excluded from accepted tests |
+| **Neural/ID utilities** | 🚧 Not implemented | `include/drone/neural_state_space.h`, `src/drone/neural_state_space.c` | Excluded from accepted tests |
 
 Confidence in all “✅ Complete” rows is backed by automated tests plus console
 examples you can run yourself.
@@ -64,8 +66,8 @@ Useful single binaries:
   `docs/drone_hover_walkthrough.md` for a narrated tour).
 - `./tests/test_numerical_solvers`, `./tests/test_physics_model`, etc.
 
-All tests pass except the intentional `[TODO]` placeholders for subsystems that
-have not been implemented yet; those executables simply print reminders.
+Placeholder executables are not counted as passing tests. CTest contains only
+implemented numerical behavior.
 
 ---
 

@@ -43,7 +43,7 @@ See `docs/examples.md` for a per-example validation summary and
 | **Integrators** | ✅ Complete | `include/utilities/numerical_solvers.h`, `src/utilities/numerical_solver.c` | `tests/utilities/test_numerical_solvers.c` |
 | **Linear models** | ✅ Complete | `include/linear_models/*.h`, `src/linear/*.c` | `tests/linear/*.c` |
 | **Drone rigid-body** | ✅ Validated derivative and propagation | `include/drone/physics_model.h`, `src/drone/physics_model.c` | `tests/drone/test_physics_model.c`, walkthrough in `docs/drone_hover_walkthrough.md` |
-| **Motor dynamics** | 🚧 Not implemented | `include/motor/motor_dynamics.h`, `src/motor/motor_dynamics.c` | Excluded from accepted tests |
+| **Motor dynamics** | ✅ Brushed DC integration | `external/motorDynamics`, `include/motor/motor_dynamics.h` | Native, SciPy, sanitizer, and composition fixtures |
 | **Battery plant/BMS** | 🚧 Not implemented | `include/battery/*.h`, `src/battery/*.c` | Excluded from accepted tests |
 | **Neural/ID utilities** | 🚧 Not implemented | `include/drone/neural_state_space.h`, `src/drone/neural_state_space.c` | Excluded from accepted tests |
 
@@ -134,7 +134,7 @@ These placeholders will be replaced by higher-fidelity functions or lookup table
 ## Roadmap
 1. State-space toolkit: linearize the spring pendulum, inverted pendulum, and double pendulum around their operating points and expose `(A,B,C,D)` helpers (point mass already done).
 2. Quaternion-aware rigid-body propagation: integrate the attitudeMathLibrary quaternions into the RK4 integrator with normalization each step to avoid gimbal lock.
-3. Motor/ESC dynamics: implement first-order lag (`τ·ω̇ + ω = ω_cmd`) and extend with measured propeller thrust/drag maps.
+3. Motor/ESC dynamics: the first accepted brushed DC electrical/mechanical plant is supplied by the `motorDynamics` submodule. Extend it with inverter, BLDC/PMSM, and measured propeller-load models rather than replacing it with an unexplained first-order lag.
 4. JSON-based vehicle configuration loader to drive the hover computation graph and examples with real hardware parameters.
 5. CLI automation: generate state-space/Laplace models, step/Bode plots, and regression comparisons directly from configuration files.
 6. Extend to lateral dynamics, wind disturbances, and alternative airframes once the above layers are stable.

@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 project(DynamicModels LANGUAGES C)
 
+set(DM_IS_TOPLEVEL OFF)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(DM_IS_TOPLEVEL ON)
+endif()
+
+option(DM_BUILD_EXAMPLES "Build dynamic_models examples" ${DM_IS_TOPLEVEL})
+option(DM_BUILD_TESTS "Build dynamic_models tests" ${DM_IS_TOPLEVEL})
+
 # Enable strict C standard enforcement
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -26,7 +34,7 @@ include_directories(${INCLUDE_DIR})
 set(ATTITUDE_MATH_DIR ${EXTERNAL_DIR}/attitudeMathLibrary)
 if(EXISTS ${ATTITUDE_MATH_DIR}/CMakeLists.txt)
     if(NOT TARGET attitude)
-        add_subdirectory(${ATTITUDE_MATH_DIR} ${CMAKE_BINARY_DIR}/attitudeMathLibrary)
+        add_subdirectory(${ATTITUDE_MATH_DIR} ${CMAKE_CURRENT_BINARY_DIR}/attitudeMathLibrary)
     endif()
     include_directories(${ATTITUDE_MATH_DIR}/include)
     set(HAVE_ATTITUDE_LIB ON)
@@ -46,6 +54,9 @@ set(SRC_FILES
     ${SRC_DIR}/linear/double_pendulum_linear.c
 )
 
+# Placeholder subsystem files remain in the tree as planned work. Do not compile
+# zero-byte translation units: strict ISO C builds correctly reject them.
+
 add_library(dynamic_models STATIC ${SRC_FILES})
 target_include_directories(dynamic_models PUBLIC ${INCLUDE_DIR})
 
@@ -59,28 +70,30 @@ else()
     target_link_libraries(dynamic_models PUBLIC m)
 endif()
 
-# Examples
-add_executable(point_mass_example ${EXAMPLES_DIR}/point_mass/main.c)
-target_link_libraries(point_mass_example PRIVATE dynamic_models)
+if(DM_BUILD_EXAMPLES)
+    add_executable(point_mass_example ${EXAMPLES_DIR}/point_mass/main.c)
+    target_link_libraries(point_mass_example PRIVATE dynamic_models)
 
-add_executable(spring_pendulum_example ${EXAMPLES_DIR}/spring_pendulum/main.c)
-target_link_libraries(spring_pendulum_example PRIVATE dynamic_models)
+    add_executable(spring_pendulum_example ${EXAMPLES_DIR}/spring_pendulum/main.c)
+    target_link_libraries(spring_pendulum_example PRIVATE dynamic_models)
 
-add_executable(double_pendulum_example ${EXAMPLES_DIR}/double_pendulum/main.c)
-target_link_libraries(double_pendulum_example PRIVATE dynamic_models)
+    add_executable(double_pendulum_example ${EXAMPLES_DIR}/double_pendulum/main.c)
+    target_link_libraries(double_pendulum_example PRIVATE dynamic_models)
 
-add_executable(inverted_pendulum_example ${EXAMPLES_DIR}/inverted_pendulum/main.c)
-target_link_libraries(inverted_pendulum_example PRIVATE dynamic_models)
+    add_executable(inverted_pendulum_example ${EXAMPLES_DIR}/inverted_pendulum/main.c)
+    target_link_libraries(inverted_pendulum_example PRIVATE dynamic_models)
 
-add_executable(drone_hover_example ${EXAMPLES_DIR}/drone/example_physics_model.c)
-target_link_libraries(drone_hover_example PRIVATE dynamic_models)
+    add_executable(drone_hover_example ${EXAMPLES_DIR}/drone/example_physics_model.c)
+    target_link_libraries(drone_hover_example PRIVATE dynamic_models)
+endif()
 
-# Add tests
-enable_testing()
-add_subdirectory(${TEST_DIR} ${CMAKE_CURRENT_BINARY_DIR}/tests)
+if(DM_BUILD_TESTS AND EXISTS ${TEST_DIR}/CMakeLists.txt)
+    enable_testing()
+    add_subdirectory(${TEST_DIR} ${CMAKE_CURRENT_BINARY_DIR}/tests)
+endif()
 
-if(EXISTS ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
-    file(REMOVE ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
+if(DM_BUILD_TESTS AND EXISTS ${CMAKE_CURRENT_BINARY_DIR}/CTestCustom.cmake)
+    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/CTestCustom.cmake)
 endif()
 
 # Add examples

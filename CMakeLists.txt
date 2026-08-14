@@ -45,11 +45,6 @@ endif()
 # Add source files for subsystems
 set(SRC_FILES
     ${SRC_DIR}/drone/physics_model.c
-    ${SRC_DIR}/drone/neural_state_space.c
-    ${SRC_DIR}/drone/system_identification.c
-    ${SRC_DIR}/motor/motor_dynamics.c
-    ${SRC_DIR}/battery/battery_model.c
-    ${SRC_DIR}/battery/battery_management.c
     ${SRC_DIR}/utilities/numerical_solver.c
     ${SRC_DIR}/linear/point_mass_linear.c
     ${SRC_DIR}/linear/mass_spring_linear.c
@@ -58,6 +53,9 @@ set(SRC_FILES
     ${SRC_DIR}/linear/inverted_pendulum_linear.c
     ${SRC_DIR}/linear/double_pendulum_linear.c
 )
+
+# Placeholder subsystem files remain in the tree as planned work. Do not compile
+# zero-byte translation units: strict ISO C builds correctly reject them.
 
 add_library(dynamic_models STATIC ${SRC_FILES})
 target_include_directories(dynamic_models PUBLIC ${INCLUDE_DIR})

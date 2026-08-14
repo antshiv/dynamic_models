@@ -12,7 +12,7 @@ add_compile_definitions(_GNU_SOURCE)
 add_compile_options(-g -Wall -Wextra -Wpedantic)
 
 # Project structure
-set(PROJECT_ROOT ${CMAKE_SOURCE_DIR})
+set(PROJECT_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 set(INCLUDE_DIR ${PROJECT_ROOT}/include)
 set(SRC_DIR ${PROJECT_ROOT}/src)
 set(TEST_DIR ${PROJECT_ROOT}/tests)
@@ -77,7 +77,7 @@ target_link_libraries(drone_hover_example PRIVATE dynamic_models)
 
 # Add tests
 enable_testing()
-add_subdirectory(${TEST_DIR})
+add_subdirectory(${TEST_DIR} ${CMAKE_CURRENT_BINARY_DIR}/tests)
 
 if(EXISTS ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
     file(REMOVE ${CMAKE_BINARY_DIR}/CTestCustom.cmake)

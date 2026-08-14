@@ -21,6 +21,22 @@ static dm_motor_actuator_config_t motor_fixture(void) {
     return config;
 }
 
+static dm_bldc_actuator_config_t bldc_fixture(void) {
+    const dm_bldc_actuator_config_t config = {
+        .motor = {
+            .phase_resistance_ohm = 0.4,
+            .phase_inductance_h = 0.01,
+            .back_emf_v_per_rad_s = 0.02,
+            .torque_constant_nm_per_a = 0.02,
+            .pole_pairs = 7,
+            .rotor_inertia_kg_m2 = 0.002,
+            .viscous_friction_nm_per_rad_s = 0.001,
+        },
+        .dc_bus_voltage_v = 12.0,
+    };
+    return config;
+}
+
 static void test_motor_adapter(void) {
     const dm_motor_actuator_config_t config = motor_fixture();
     const dm_motor_actuator_input_t input = {1.0, 0.2};
@@ -35,12 +51,16 @@ static void test_motor_adapter(void) {
 }
 
 static void test_motor_speed_feeds_vehicle(void) {
-    const dm_motor_actuator_config_t motor_config = motor_fixture();
-    const dm_motor_actuator_input_t motor_input = {1.0, 0.0};
-    dm_motor_actuator_state_t motor_state = {{0.0, 0.0, 0.0}};
-    for (size_t step = 0; step < 50000; ++step) {
-        assert(dm_motor_actuator_step_checked(
-            &motor_config, &motor_state, &motor_input, 0.0001) == DM_MOTOR_OK);
+    const dm_bldc_actuator_config_t motor_config = bldc_fixture();
+    dm_bldc_actuator_state_t motor_state = {
+        .motor = {{0.0, 0.0, 0.0}, 0.0, 0.0},
+    };
+    dm_bldc_actuator_input_t motor_input = {0.35, 0, 0.01};
+    for (size_t step = 0; step < 10000; ++step) {
+        motor_input.commutation_sector = (uint32_t)((step / 1000) % 6);
+        assert(dm_bldc_actuator_step_checked(
+            &motor_config, &motor_state, &motor_input, 0.00001) ==
+            DM_MOTOR_OK);
     }
 
     dm_vehicle_config_t vehicle_config;
@@ -65,11 +85,24 @@ static void test_motor_speed_feeds_vehicle(void) {
     vehicle.state.quaternion[0] = 1.0;
 
     double rotor_speed[DM_MAX_ROTORS] = {0.0};
-    rotor_speed[0] = fabs(dm_motor_actuator_speed_rad_s(&motor_state));
+    rotor_speed[0] = fabs(dm_bldc_actuator_speed_rad_s(&motor_state));
     dm_state_t derivative;
     assert(dm_vehicle_evaluate_checked(
         &vehicle, rotor_speed, &derivative) == DM_OK);
     assert(derivative.velocity[2] < vehicle_config.gravity);
+}
+
+static void test_invalid_bldc_sector_preserves_state(void) {
+    const dm_bldc_actuator_config_t config = bldc_fixture();
+    const dm_bldc_actuator_input_t input = {0.5, 6, 0.0};
+    dm_bldc_actuator_state_t state = {
+        .motor = {{1.0, -1.0, 0.0}, 2.0, 3.0},
+    };
+    const dm_bldc_actuator_state_t before = state;
+
+    assert(dm_bldc_actuator_step_checked(
+        &config, &state, &input, 0.001) == DM_MOTOR_INVALID_ARGUMENT);
+    assert(memcmp(&state, &before, sizeof(state)) == 0);
 }
 
 static void test_invalid_command_preserves_state(void) {
@@ -87,6 +120,7 @@ int main(void) {
     test_motor_adapter();
     test_motor_speed_feeds_vehicle();
     test_invalid_command_preserves_state();
+    test_invalid_bldc_sector_preserves_state();
     puts("dynamic_models motor integration tests passed");
     return 0;
 }

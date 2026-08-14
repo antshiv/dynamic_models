@@ -43,7 +43,7 @@ See `docs/examples.md` for a per-example validation summary and
 | **Integrators** | ✅ Complete | `include/utilities/numerical_solvers.h`, `src/utilities/numerical_solver.c` | `tests/utilities/test_numerical_solvers.c` |
 | **Linear models** | ✅ Complete | `include/linear_models/*.h`, `src/linear/*.c` | `tests/linear/*.c` |
 | **Drone rigid-body** | ✅ Validated derivative and propagation | `include/drone/physics_model.h`, `src/drone/physics_model.c` | `tests/drone/test_physics_model.c`, walkthrough in `docs/drone_hover_walkthrough.md` |
-| **Motor dynamics** | ✅ Brushed DC integration | `external/motorDynamics`, `include/motor/motor_dynamics.h` | Native, SciPy, sanitizer, and composition fixtures |
+| **Motor dynamics** | ✅ Brushed DC reference + BLDC integration | `external/motorDynamics`, `include/motor/motor_dynamics.h` | Native, SciPy, sanitizer, and composition fixtures |
 | **Battery plant/BMS** | 🚧 Not implemented | `include/battery/*.h`, `src/battery/*.c` | Excluded from accepted tests |
 | **Neural/ID utilities** | 🚧 Not implemented | `include/drone/neural_state_space.h`, `src/drone/neural_state_space.c` | Excluded from accepted tests |
 
